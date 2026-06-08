@@ -1,0 +1,1640 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>✨ 我的計劃本</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #faf7f2;
+        --cream2: #f4efe6;
+        --cream3: #ede6d8;
+        --brown-light: #c4a882;
+        --brown: #9b7b5a;
+        --brown-dark: #6b5240;
+        --pink: #f2a7b8;
+        --pink-light: #fce8ee;
+        --green: #7bc8a4;
+        --green-light: #e8f7f0;
+        --yellow: #f7d98c;
+        --yellow-light: #fef8e7;
+        --blue: #a7c4e8;
+        --blue-light: #eaf2fb;
+        --purple: #c4a8e8;
+        --purple-light: #f3edfb;
+        --text: #5c4a38;
+        --text-muted: #9b8878;
+        --border: #e2d8cc;
+        --shadow: rgba(156, 123, 90, 0.12);
+        --radius: 16px;
+        --radius-sm: 10px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Nunito", "Zen Maru Gothic", sans-serif;
+        background: var(--cream);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* === TOP BAR === */
+      .topbar {
+        background: var(--cream);
+        border-bottom: 1.5px solid var(--border);
+        padding: 14px 20px 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 12px var(--shadow);
+      }
+
+      .topbar-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--brown-dark);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* 【技術點】可編輯標題的 focus 視覺樣式 */
+      #topbarTitleText {
+        outline: none;
+        transition: background 0.2s;
+        border-radius: var(--radius-sm);
+        padding: 2px 6px;
+        cursor: pointer;
+      }
+      #topbarTitleText:focus {
+        background: var(--cream2);
+        box-shadow: 0 0 0 1.5px var(--border);
+      }
+
+      .title-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--pink);
+        display: inline-block;
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: scale(1.3);
+          opacity: 0.7;
+        }
+      }
+
+      /* === TABS STRIP === */
+      .tabs-wrap {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        overflow-x: auto;
+        padding-bottom: 0;
+        scrollbar-width: none;
+      }
+      .tabs-wrap::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tab-group {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 3px;
+        background: var(--cream2);
+        border-radius: var(--radius) var(--radius) 0 0;
+        border: 1.5px solid var(--border);
+        border-bottom: none;
+        position: relative;
+        transition: all 0.2s;
+      }
+
+      /* 【技術點】當拖拽對象在資料夾上方時的視覺回饋 */
+      .tab-group.dragover {
+        background: var(--cream3);
+        border-color: var(--brown);
+        transform: scale(1.02);
+      }
+
+      .folder-icon {
+        font-size: 14px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.2s;
+        color: var(--text-muted);
+      }
+      .folder-icon:hover {
+        background: var(--cream3);
+      }
+
+      .tab {
+        position: relative;
+        padding: 7px 14px;
+        border-radius: 10px 10px 0 0;
+        cursor: grab; /* 提示使用者這是一個可以拖拽的元件 */
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        white-space: nowrap;
+        user-select: none;
+        transition: all 0.2s;
+        border: 1.5px solid transparent;
+        border-bottom: none;
+        background: transparent;
+        min-width: 60px;
+        text-align: center;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .tab:active {
+        cursor: grabbing;
+      }
+      /* 拖拽進行中的樣式 */
+      .tab.dragging {
+        opacity: 0.4;
+        border: 1.5px dashed var(--brown-light);
+      }
+
+      .tab:hover {
+        color: var(--text);
+        background: var(--cream3);
+      }
+
+      .tab.active {
+        background: var(--cream);
+        color: var(--brown-dark);
+        border-color: var(--border);
+        border-bottom-color: var(--cream);
+        margin-bottom: -1.5px;
+        z-index: 1;
+      }
+
+      .tab .tab-color-dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        margin-right: 5px;
+        vertical-align: middle;
+      }
+
+      .add-tab-btn {
+        padding: 7px 10px;
+        font-size: 18px;
+        color: var(--brown-light);
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+        transition: all 0.2s;
+        user-select: none;
+        flex-shrink: 0;
+        line-height: 1;
+      }
+      .add-tab-btn:hover {
+        color: var(--brown);
+        background: var(--cream2);
+      }
+
+      /* === MAIN CONTENT === */
+      .main {
+        padding: 20px 16px 100px;
+        max-width: 680px;
+        margin: 0 auto;
+      }
+
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+
+      /* === LIST HEADER === */
+      .list-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .list-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--brown-dark);
+      }
+
+      .list-subtitle {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+
+      .add-item-btn {
+        background: var(--brown-dark);
+        color: white;
+        border: none;
+        border-radius: 50px;
+        padding: 8px 18px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .add-item-btn:hover {
+        background: var(--brown);
+        transform: translateY(-1px);
+      }
+      .add-item-btn:active {
+        transform: scale(0.97);
+      }
+
+      /* === ADD FORM === */
+      .add-form {
+        background: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        display: none;
+        box-shadow: 0 2px 12px var(--shadow);
+      }
+      .add-form.visible {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .add-form input {
+        flex: 1;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 9px 13px;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--text);
+        background: var(--cream);
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .add-form input:focus {
+        border-color: var(--brown-light);
+        background: white;
+      }
+      .add-form input::placeholder {
+        color: var(--text-muted);
+      }
+
+      .confirm-btn {
+        background: var(--pink);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 9px 16px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.2s;
+      }
+      .confirm-btn:hover {
+        background: #e8919e;
+      }
+
+      /* === SECTION LABEL === */
+      .section-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin: 18px 0 8px 2px;
+      }
+
+      /* === TODO ITEMS === */
+      .todo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .todo-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius);
+        user-select: none;
+      }
+
+      .todo-inner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+        transition:
+          transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+          box-shadow 0.2s;
+        position: relative;
+        z-index: 1;
+        will-change: transform;
+      }
+
+      .todo-item:hover .todo-inner {
+        box-shadow: 0 3px 14px var(--shadow);
+      }
+
+      /* Swipe delete background */
+      .delete-bg {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 80px;
+        background: #ff6b6b;
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        z-index: 0;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .delete-bg:hover {
+        background: #ff4d4d;
+      }
+
+      /* === CHECKBOX === */
+      .check-btn {
+        width: 28px;
+        height: 28px;
+        border: 2px solid var(--border);
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0;
+        flex-shrink: 0;
+        transition: all 0.2s;
+        background: white;
+        position: relative;
+        overflow: hidden;
+      }
+      .check-btn:hover {
+        border-color: var(--brown-light);
+        background: var(--cream);
+      }
+
+      /* Smile animation */
+      @keyframes smileIn {
+        0% {
+          transform: scale(0) rotate(-20deg);
+          opacity: 0;
+        }
+        60% {
+          transform: scale(1.3) rotate(5deg);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+        }
+      }
+
+      .check-btn .smile {
+        font-size: 16px;
+        display: none;
+        animation: smileIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+      .check-btn .checkmark {
+        font-size: 14px;
+        display: none;
+        color: var(--green);
+      }
+      .check-btn .ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        border: 2px solid var(--green);
+        opacity: 0;
+        transform: scale(1);
+        pointer-events: none;
+      }
+
+      @keyframes ringPop {
+        0% {
+          transform: scale(1);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(1.8);
+          opacity: 0;
+        }
+      }
+
+      .check-btn.smiling .smile {
+        display: block;
+      }
+      .check-btn.smiling {
+        border-color: var(--yellow);
+        background: var(--yellow-light);
+      }
+      .check-btn.done {
+        border-color: var(--green);
+        background: var(--green-light);
+      }
+      .check-btn.done .checkmark {
+        display: block;
+      }
+      .check-btn.done .ring {
+        animation: ringPop 0.5s ease-out forwards;
+      }
+
+      .todo-text {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        line-height: 1.4;
+        transition: all 0.3s;
+      }
+
+      .todo-item.done .todo-text {
+        text-decoration: line-through;
+        color: var(--text-muted);
+        opacity: 0.7;
+      }
+
+      /* Empty state */
+      .empty-state {
+        text-align: center;
+        padding: 48px 20px;
+        color: var(--text-muted);
+      }
+      .empty-state .empty-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+      }
+      .empty-state p {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      /* === CONTEXT MENU === */
+      .ctx-menu {
+        position: fixed;
+        background: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        z-index: 999;
+        overflow: hidden;
+        min-width: 140px;
+        display: none;
+        animation: menuIn 0.15s ease-out;
+      }
+      @keyframes menuIn {
+        from {
+          opacity: 0;
+          transform: scale(0.92);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .ctx-menu.visible {
+        display: block;
+      }
+      .ctx-item {
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.15s;
+        color: var(--text);
+      }
+      .ctx-item:hover {
+        background: var(--cream);
+      }
+      .ctx-item.danger {
+        color: #e24b4a;
+      }
+      .ctx-item.danger:hover {
+        background: #fcebeb;
+      }
+
+      /* === MODAL === */
+      .modal-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(91, 70, 56, 0.35);
+        z-index: 500;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        backdrop-filter: blur(2px);
+      }
+      .modal-bg.visible {
+        display: flex;
+      }
+
+      .modal {
+        background: var(--cream);
+        border-radius: var(--radius);
+        padding: 24px;
+        width: 100%;
+        max-width: 360px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        animation: modalIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      @keyframes modalIn {
+        from {
+          transform: scale(0.85);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .modal h3 {
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 16px;
+        color: var(--brown-dark);
+      }
+
+      .modal input,
+      .modal select {
+        width: 100%;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 13px;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--text);
+        background: white;
+        outline: none;
+        margin-bottom: 10px;
+        transition: border-color 0.2s;
+      }
+      .modal input:focus,
+      .modal select:focus {
+        border-color: var(--brown-light);
+      }
+
+      .color-picker {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      .color-swatch {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2.5px solid transparent;
+        transition:
+          transform 0.15s,
+          border-color 0.15s;
+        flex-shrink: 0;
+      }
+      .color-swatch:hover {
+        transform: scale(1.15);
+      }
+      .color-swatch.selected {
+        border-color: var(--brown-dark);
+        transform: scale(1.1);
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 6px;
+      }
+      .btn-ghost {
+        background: none;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        color: var(--text-muted);
+        transition: all 0.15s;
+      }
+      .btn-ghost:hover {
+        background: var(--cream2);
+        color: var(--text);
+      }
+      .btn-primary {
+        background: var(--brown-dark);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 8px 20px;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.15s;
+      }
+      .btn-primary:hover {
+        background: var(--brown);
+      }
+
+      /* Progress */
+      .progress-bar {
+        height: 5px;
+        background: var(--cream3);
+        border-radius: 10px;
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--green);
+        border-radius: 10px;
+        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Confetti */
+      .confetti-piece {
+        position: fixed;
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        pointer-events: none;
+        z-index: 9999;
+        animation: confettiFall 1.2s ease-in forwards;
+      }
+      @keyframes confettiFall {
+        0% {
+          transform: translateY(-20px) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(60vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
+
+      /* Mobile swipe hint */
+      .swipe-hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: right;
+        margin-bottom: 6px;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--cream3);
+        border-radius: 10px;
+      }
+
+      @media (max-width: 480px) {
+        .main {
+          padding: 16px 12px 100px;
+        }
+        .topbar {
+          padding: 12px 12px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar-title">
+        <span class="title-dot"></span>
+        <span id="topbarTitleText" contenteditable="true">我的計劃本</span>
+      </div>
+      <div class="tabs-wrap" id="tabsWrap">
+        <div class="add-tab-btn" id="addTabBtn" title="新增分頁">＋</div>
+      </div>
+    </div>
+
+    <div class="main" id="mainContent"></div>
+
+    <div class="ctx-menu" id="ctxMenu">
+      <div class="ctx-item" id="ctxRename">✏️ 重新命名</div>
+      <div class="ctx-item" id="ctxMove">📁 移到資料夾</div>
+      <div class="ctx-item danger" id="ctxDelete">🗑️ 刪除分頁</div>
+    </div>
+
+    <div class="modal-bg" id="tabModal">
+      <div class="modal">
+        <h3 id="modalTitle">新增分頁</h3>
+        <input
+          type="text"
+          id="tabNameInput"
+          placeholder="分頁名稱"
+          maxlength="20"
+        />
+        <div
+          style="
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+          "
+        >
+          選擇顏色
+        </div>
+        <div class="color-picker" id="colorPicker"></div>
+        <div
+          style="
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
+          "
+        >
+          加入資料夾（選填）
+        </div>
+        <select id="folderSelect">
+          <option value="">不加入資料夾</option>
+        </select>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="modalCancel">取消</button>
+          <button class="btn-primary" id="modalConfirm">確認</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="folderModal">
+      <div class="modal">
+        <h3>新增資料夾</h3>
+        <input
+          type="text"
+          id="folderNameInput"
+          placeholder="資料夾名稱"
+          maxlength="20"
+        />
+        <div class="modal-actions">
+          <button class="btn-ghost" id="folderCancel">取消</button>
+          <button class="btn-primary" id="folderConfirm">確認</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="moveModal">
+      <div class="modal">
+        <h3>移到資料夾</h3>
+        <select id="moveFolderSelect">
+          <option value="">不加入資料夾</option>
+        </select>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="moveCancelBtn">取消</button>
+          <button class="btn-primary" id="moveConfirmBtn">確認</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ===================== STATE (狀態管理) =====================
+      // 【學習點：狀態驅動開發】我們不直接用 JS 去修改網頁上的字，而是修改這份資料（state），然後呼叫 render() 重繪畫面。
+      let state = {
+        title: "我的計劃本", // 新增一個欄位存放自訂標題
+        folders: [
+          { id: "f1", name: "生活" },
+          { id: "f2", name: "工作" },
+        ],
+        tabs: [
+          {
+            id: "t1",
+            name: "今日待辦",
+            color: "#F2A7B8",
+            folderId: "f1",
+            items: [
+              { id: "i1", text: "喝 8 杯水 💧", done: false },
+              { id: "i2", text: "讀書 30 分鐘 📖", done: false },
+              { id: "i3", text: "整理房間 🧹", done: true },
+            ],
+          },
+          {
+            id: "t2",
+            name: "購物清單",
+            color: "#7BC8A4",
+            folderId: "f1",
+            items: [
+              { id: "i4", text: "牛奶", done: false },
+              { id: "i5", text: "蔬菜沙拉材料", done: false },
+            ],
+          },
+          {
+            id: "t3",
+            name: "工作任務",
+            color: "#A7C4E8",
+            folderId: "f2",
+            items: [
+              { id: "i6", text: "完成週報", done: false },
+              { id: "i7", text: "回覆 Email", done: true },
+            ],
+          },
+        ],
+        activeTab: "t1",
+        nextId: 100,
+      };
+
+      const TAB_COLORS = [
+        "#F2A7B8",
+        "#7BC8A4",
+        "#F7D98C",
+        "#A7C4E8",
+        "#C4A8E8",
+        "#F2C4A8",
+        "#A8E8D4",
+        "#E8A7C4",
+      ];
+
+      // ===================== SAVE/LOAD (本機快取) =====================
+      function saveState() {
+        try {
+          localStorage.setItem("plannerState", JSON.stringify(state));
+        } catch (e) {}
+      }
+      function loadState() {
+        try {
+          const s = localStorage.getItem("plannerState");
+          if (s) {
+            state = JSON.parse(s);
+            if (!state.title) state.title = "我的計劃本"; // 防呆機制
+          }
+        } catch (e) {}
+      }
+
+      // ===================== RENDER (畫面渲染) =====================
+      function render() {
+        // 同步自訂標題（如果使用者目前正在輸入，就不要去覆蓋它的游標）
+        const titleEl = document.getElementById("topbarTitleText");
+        if (document.activeElement !== titleEl) {
+          titleEl.textContent = state.title || "我的計劃本";
+        }
+
+        renderTabs();
+        renderPages();
+        saveState();
+      }
+
+      function renderTabs() {
+        const wrap = document.getElementById("tabsWrap");
+        const addBtn = document.getElementById("addTabBtn");
+
+        // 清空舊的分頁元件
+        wrap.querySelectorAll(".tab, .tab-group").forEach((el) => el.remove());
+
+        // 分組整理：依照資料夾分類
+        const grouped = {};
+        const ungrouped = [];
+        state.tabs.forEach((tab) => {
+          if (tab.folderId) {
+            if (!grouped[tab.folderId]) grouped[tab.folderId] = [];
+            grouped[tab.folderId].push(tab);
+          } else {
+            ungrouped.push(tab);
+          }
+        });
+
+        // 渲染沒有在資料夾裡面的獨立分頁
+        ungrouped.forEach((tab) => {
+          const el = makeTabEl(tab);
+          wrap.insertBefore(el, addBtn);
+        });
+
+        // 渲染資料夾群組
+        state.folders.forEach((folder) => {
+          const tabs = grouped[folder.id] || []; // 【修改點】即使是空資料夾也給空陣列，不要跳出，這樣才能拖東西進去。
+
+          const group = document.createElement("div");
+          group.className = "tab-group";
+          group.setAttribute("data-folder", folder.id);
+
+          // --- 【技術學習點：HTML5 拖放 API (放置目標)】 ---
+          // 必須阻斷 dragover 的預設行為，瀏覽器才允許我們放開滑鼠進行 drop
+          group.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            group.classList.add("dragover"); // 加上高亮虛線樣式
+          });
+          group.addEventListener("dragleave", () => {
+            group.classList.remove("dragover");
+          });
+          group.addEventListener("drop", (e) => {
+            e.preventDefault();
+            group.classList.remove("dragover");
+            const tabId = e.dataTransfer.getData("text/plain"); // 取得被拖拽分頁的 ID
+            const folderId = group.getAttribute("data-folder");
+
+            const targetTab = state.tabs.find((t) => t.id === tabId);
+            if (targetTab) {
+              targetTab.folderId = folderId; // 變更資料夾歸屬
+              render();
+            }
+          });
+
+          const fLabel = document.createElement("span");
+          fLabel.className = "folder-icon";
+          fLabel.textContent = "📁";
+          fLabel.title = folder.name;
+          group.appendChild(fLabel);
+
+          // 渲染這個資料夾內的所有分頁
+          tabs.forEach((tab) => {
+            const el = makeTabEl(tab);
+            group.appendChild(el);
+          });
+          wrap.insertBefore(group, addBtn);
+        });
+      }
+
+      function makeTabEl(tab) {
+        const el = document.createElement("div");
+        el.className = "tab" + (state.activeTab === tab.id ? " active" : "");
+        el.setAttribute("data-tabid", tab.id);
+        el.innerHTML = `<span class="tab-color-dot" style="background:${tab.color}"></span>${tab.name}`;
+
+        // --- 【技術學習點：HTML5 拖放 API (可拖拽元件)】 ---
+        el.setAttribute("draggable", "true"); // 宣告這個 div 是可拖拽的
+        el.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", tab.id); // 將分頁 ID 綁入拖放事件暫存區
+          el.classList.add("dragging"); // 變成半透明
+        });
+        el.addEventListener("dragend", () => {
+          el.classList.remove("dragging");
+          document
+            .querySelectorAll(".tab-group")
+            .forEach((g) => g.classList.remove("dragover"));
+        });
+
+        // 點擊事件與右鍵選單
+        el.addEventListener("click", () => {
+          state.activeTab = tab.id;
+          render();
+        });
+        el.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          showCtxMenu(e, tab.id);
+        });
+
+        // 手機長按邏輯
+        let pressTimer;
+        el.addEventListener(
+          "touchstart",
+          () => {
+            pressTimer = setTimeout(() => showCtxMenu(null, tab.id, el), 600);
+          },
+          { passive: true },
+        );
+        el.addEventListener("touchend", () => clearTimeout(pressTimer), {
+          passive: true,
+        });
+        el.addEventListener("touchmove", () => clearTimeout(pressTimer), {
+          passive: true,
+        });
+
+        return el;
+      }
+
+      function renderPages() {
+        const main = document.getElementById("mainContent");
+        main.innerHTML = "";
+        state.tabs.forEach((tab) => {
+          const page = document.createElement("div");
+          page.className =
+            "page" + (state.activeTab === tab.id ? " active" : "");
+          page.setAttribute("data-page", tab.id);
+          page.innerHTML = buildPageHTML(tab);
+          main.appendChild(page);
+          attachPageEvents(page, tab);
+        });
+      }
+
+      function buildPageHTML(tab) {
+        const done = tab.items.filter((i) => i.done).length;
+        const total = tab.items.length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const folderName = tab.folderId
+          ? (state.folders.find((f) => f.id === tab.folderId) || {}).name
+          : null;
+
+        return `
+          <div class="list-header">
+            <div>
+              ${folderName ? `<div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:2px;">📁 ${folderName}</div>` : ""}
+              <div class="list-title">${tab.name}</div>
+              <div class="list-subtitle">${total ? `${done}/${total} 完成 · ${pct}%` : "還沒有任何項目"}</div>
+            </div>
+            <button class="add-item-btn" data-additem="${tab.id}">＋ 新增</button>
+          </div>
+          ${total ? `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>` : ""}
+          <div class="add-form" id="addForm_${tab.id}">
+            <input type="text" placeholder="輸入內容…" id="addInput_${tab.id}" maxlength="60" />
+            <button class="confirm-btn" data-confirmitem="${tab.id}">加入</button>
+          </div>
+          ${total ? `<div class="swipe-hint">← 左滑項目露出垃圾桶點擊刪除</div>` : ""}
+          <div class="todo-list" id="list_${tab.id}">
+            ${tab.items.map((item) => buildItemHTML(item)).join("")}
+          </div>
+          ${total === 0 ? `<div class="empty-state"><div class="empty-icon">🌸</div><p>加入第一個計劃吧！</p></div>` : ""}
+        `;
+      }
+
+      function buildItemHTML(item) {
+        return `
+          <div class="todo-item${item.done ? " done" : ""}" data-item="${item.id}">
+            <div class="delete-bg">🗑️</div>
+            <div class="todo-inner">
+              <div class="check-btn${item.done ? " done" : ""}" data-check="${item.id}">
+                <span class="smile">😊</span>
+                <span class="checkmark">✓</span>
+                <div class="ring"></div>
+              </div>
+              <div class="todo-text">${escHtml(item.text)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      function attachPageEvents(page, tab) {
+        if (page.querySelector(`[data-additem="${tab.id}"]`))
+          page
+            .querySelector(`[data-additem="${tab.id}"]`)
+            .addEventListener("click", () => toggleAddForm(tab.id));
+
+        if (page.querySelector(`[data-confirmitem="${tab.id}"]`))
+          page
+            .querySelector(`[data-confirmitem="${tab.id}"]`)
+            .addEventListener("click", () => addItem(tab.id));
+
+        const input = page.querySelector(`#addInput_${tab.id}`);
+        if (input)
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") addItem(tab.id);
+          });
+
+        attachItemEvents(page, tab);
+      }
+
+      function attachItemEvents(page, tab) {
+        page.querySelectorAll(".check-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleItem(btn.getAttribute("data-check"), tab.id, btn);
+          });
+        });
+
+        // --- 【技術學習點：點擊垃圾桶才刪除】 ---
+        // 我們直接將點擊事件綁定在 .delete-bg 本身，不受左滑卡片影響
+        page.querySelectorAll(".delete-bg").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation(); // 阻止事件冒泡，不讓外層其他點擊事件誤觸
+            const itemId = btn.closest(".todo-item").getAttribute("data-item");
+            deleteItem(itemId, tab.id);
+          });
+        });
+
+        page.querySelectorAll(".todo-item").forEach((el) => {
+          attachSwipe(el, tab.id);
+        });
+      }
+
+      // ===================== SWIPE TO DELETE (手勢滑動邏輯) =====================
+      function attachSwipe(el, tabId) {
+        const inner = el.querySelector(".todo-inner");
+        let startX = 0,
+          curX = 0,
+          dragging = false,
+          revealed = false;
+
+        function onStart(x) {
+          startX = x;
+          curX = x;
+          dragging = true;
+        }
+        function onMove(x) {
+          if (!dragging) return;
+          curX = x;
+          // 計算手指或滑動的偏移量，若是已經拉開狀態，要扣除基本 80px 寬度
+          let dx = curX - startX;
+          if (revealed) dx -= 80;
+
+          const finalX = Math.max(-100, Math.min(0, dx)); // 限制邊界，最多滑 100px 阻尼
+          inner.style.transition = "none";
+          inner.style.transform = `translateX(${finalX}px)`;
+        }
+        function onEnd() {
+          if (!dragging) return;
+          dragging = false;
+          inner.style.transition =
+            "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+
+          const dx = curX - startX;
+          // 判定：如果滑動超過 40 像素就自動彈開固定，不然就縮回
+          if (dx < -40) {
+            inner.style.transform = "translateX(-80px)";
+            revealed = true;
+          } else {
+            inner.style.transform = "translateX(0)";
+            revealed = false;
+          }
+        }
+
+        // 手機觸控事件
+        el.addEventListener(
+          "touchstart",
+          (e) => onStart(e.touches[0].clientX),
+          { passive: true },
+        );
+        el.addEventListener(
+          "touchmove",
+          (e) => {
+            if (dragging) onMove(e.touches[0].clientX);
+          },
+          { passive: true },
+        );
+        el.addEventListener("touchend", () => onEnd());
+
+        // 電腦滑鼠事件
+        inner.addEventListener("mousedown", (e) => {
+          if (e.button === 0) onStart(e.clientX);
+        });
+        window.addEventListener("mousemove", (e) => {
+          if (dragging) onMove(e.clientX);
+        });
+        window.addEventListener("mouseup", () => onEnd());
+
+        // --- 【技術學習點：事件捕獲與收回手勢】 ---
+        // 當計畫項目處於「展開垃圾桶」狀態下，如果使用者去點擊文字，我們應該將它收回而不是觸發打勾。
+        // 這裡設定 { capture: true } (事件捕獲)，讓它在點擊事件往下傳遞前先行攔截！
+        inner.addEventListener(
+          "click",
+          (e) => {
+            if (revealed) {
+              e.preventDefault();
+              e.stopPropagation(); // 攔截！不讓點擊傳給底下的打勾按鈕
+              inner.style.transform = "translateX(0)"; // 彈回原位
+              revealed = false;
+            }
+          },
+          { capture: true },
+        );
+      }
+
+      // ===================== ACTIONS (各類計畫操作) =====================
+      function toggleAddForm(tabId) {
+        const form = document.getElementById(`addForm_${tabId}`);
+        if (!form) return;
+        const visible = form.classList.toggle("visible");
+        if (visible) {
+          const input = document.getElementById(`addInput_${tabId}`);
+          if (input) setTimeout(() => input.focus(), 50);
+        }
+      }
+
+      function addItem(tabId) {
+        const input = document.getElementById(`addInput_${tabId}`);
+        if (!input || !input.value.trim()) return;
+        const text = input.value.trim();
+        const tab = state.tabs.find((t) => t.id === tabId);
+        if (!tab) return;
+        tab.items.push({ id: "i" + ++state.nextId, text, done: false });
+        input.value = "";
+        render();
+      }
+
+      function toggleItem(itemId, tabId, btnEl) {
+        const tab = state.tabs.find((t) => t.id === tabId);
+        if (!tab) return;
+        const item = tab.items.find((i) => i.id === itemId);
+        if (!item) return;
+
+        if (!item.done) {
+          btnEl.classList.add("smiling");
+          btnEl.querySelector(".smile").style.display = "block";
+          setTimeout(() => {
+            btnEl.classList.remove("smiling");
+            btnEl.querySelector(".smile").style.display = "none";
+            item.done = true;
+            btnEl.classList.add("done");
+            btnEl.querySelector(".checkmark").style.display = "block";
+            btnEl.querySelector(".ring").style.animation =
+              "ringPop 0.5s ease-out forwards";
+
+            const itemEl = btnEl.closest(".todo-item");
+            if (itemEl) itemEl.classList.add("done");
+            spawnConfetti(btnEl.getBoundingClientRect());
+            updateProgress(tabId);
+            saveState();
+          }, 600);
+        } else {
+          item.done = false;
+          btnEl.classList.remove("done");
+          btnEl.querySelector(".checkmark").style.display = "none";
+          btnEl.querySelector(".ring").style.animation = "none";
+          const itemEl = btnEl.closest(".todo-item");
+          if (itemEl) itemEl.classList.remove("done");
+          updateProgress(tabId);
+          saveState();
+        }
+      }
+
+      function updateProgress(tabId) {
+        const tab = state.tabs.find((t) => t.id === tabId);
+        if (!tab) return;
+        const done = tab.items.filter((i) => i.done).length;
+        const total = tab.items.length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const fill = document.querySelector(
+          `[data-page="${tabId}"] .progress-fill`,
+        );
+        if (fill) fill.style.width = pct + "%";
+        const subtitle = document.querySelector(
+          `[data-page="${tabId}"] .list-subtitle`,
+        );
+        if (subtitle) subtitle.textContent = `${done}/${total} 完成 · ${pct}%`;
+      }
+
+      function deleteItem(itemId, tabId) {
+        const tab = state.tabs.find((t) => t.id === tabId);
+        if (!tab) return;
+        tab.items = tab.items.filter((i) => i.id !== itemId);
+        render();
+      }
+
+      // ===================== CONFETTI (撒花特效) =====================
+      function spawnConfetti(rect) {
+        const colors = ["#F2A7B8", "#7BC8A4", "#F7D98C", "#A7C4E8", "#C4A8E8"];
+        for (let i = 0; i < 10; i++) {
+          const el = document.createElement("div");
+          el.className = "confetti-piece";
+          el.style.cssText = `
+            left: ${rect.left + rect.width / 2 + (Math.random() - 0.5) * 60}px;
+            top: ${rect.top}px;
+            background: ${colors[Math.floor(Math.random() * colors.length)]};
+            border-radius: ${Math.random() > 0.5 ? "50%" : "2px"};
+            width: ${6 + Math.random() * 6}px;
+            height: ${6 + Math.random() * 6}px;
+            animation-delay: ${Math.random() * 0.3}s;
+            animation-duration: ${0.8 + Math.random() * 0.6}s;
+          `;
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 1500);
+        }
+      }
+
+      // ===================== CONTEXT MENU (選單) =====================
+      let ctxTabId = null;
+
+      function showCtxMenu(e, tabId, fromEl) {
+        ctxTabId = tabId;
+        const menu = document.getElementById("ctxMenu");
+        menu.classList.add("visible");
+        if (e) {
+          let x = e.clientX,
+            y = e.clientY;
+          if (x + 160 > window.innerWidth) x = window.innerWidth - 165;
+          if (y + 140 > window.innerHeight) y = window.innerHeight - 145;
+          menu.style.left = x + "px";
+          menu.style.top = y + "px";
+        } else if (fromEl) {
+          const r = fromEl.getBoundingClientRect();
+          menu.style.left = r.left + "px";
+          menu.style.top = r.bottom + 4 + "px";
+        }
+      }
+
+      document.getElementById("ctxDelete").addEventListener("click", () => {
+        if (!ctxTabId) return;
+        state.tabs = state.tabs.filter((t) => t.id !== ctxTabId);
+        if (state.activeTab === ctxTabId)
+          state.activeTab = state.tabs[0]?.id || null;
+        hideCtxMenu();
+        render();
+      });
+
+      document.getElementById("ctxRename").addEventListener("click", () => {
+        if (!ctxTabId) return;
+        const tab = state.tabs.find((t) => t.id === ctxTabId);
+        if (!tab) return;
+        hideCtxMenu();
+        openTabModal(tab);
+      });
+
+      document.getElementById("ctxMove").addEventListener("click", () => {
+        if (!ctxTabId) return;
+        hideCtxMenu();
+        openMoveModal(ctxTabId);
+      });
+
+      function hideCtxMenu() {
+        document.getElementById("ctxMenu").classList.remove("visible");
+      }
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".ctx-menu")) hideCtxMenu();
+      });
+
+      // ===================== MODAL WINDOWS =====================
+      let editingTabId = null;
+      let selectedColor = TAB_COLORS[0];
+
+      function openTabModal(existingTab) {
+        editingTabId = existingTab ? existingTab.id : null;
+        selectedColor = existingTab ? existingTab.color : TAB_COLORS[0];
+
+        document.getElementById("modalTitle").textContent = existingTab
+          ? "編輯分頁"
+          : "新增分頁";
+        document.getElementById("tabNameInput").value = existingTab
+          ? existingTab.name
+          : "";
+
+        const cp = document.getElementById("colorPicker");
+        cp.innerHTML = "";
+        TAB_COLORS.forEach((c) => {
+          const sw = document.createElement("div");
+          sw.className =
+            "color-swatch" + (c === selectedColor ? " selected" : "");
+          sw.style.background = c;
+          sw.addEventListener("click", () => {
+            selectedColor = c;
+            cp.querySelectorAll(".color-swatch").forEach((s) =>
+              s.classList.remove("selected"),
+            );
+            sw.classList.add("selected");
+          });
+          cp.appendChild(sw);
+        });
+
+        const fs = document.getElementById("folderSelect");
+        fs.innerHTML = '<option value="">不加入資料夾</option>';
+        state.folders.forEach((f) => {
+          const opt = document.createElement("option");
+          opt.value = f.id;
+          opt.textContent = f.name;
+          if (existingTab && existingTab.folderId === f.id) opt.selected = true;
+          fs.appendChild(opt);
+        });
+
+        const newOpt = document.createElement("option");
+        newOpt.value = "__new__";
+        newOpt.textContent = "＋ 新增資料夾…";
+        fs.appendChild(newOpt);
+
+        fs.addEventListener("change", function handler() {
+          if (fs.value === "__new__") {
+            fs.removeEventListener("change", handler);
+            hideTabModal();
+            openFolderModal(() => {
+              openTabModal(existingTab);
+            });
+          }
+        });
+
+        document.getElementById("tabModal").classList.add("visible");
+        setTimeout(() => document.getElementById("tabNameInput").focus(), 100);
+      }
+
+      function hideTabModal() {
+        document.getElementById("tabModal").classList.remove("visible");
+      }
+
+      document
+        .getElementById("addTabBtn")
+        .addEventListener("click", () => openTabModal(null));
+      document
+        .getElementById("modalCancel")
+        .addEventListener("click", hideTabModal);
+
+      document.getElementById("modalConfirm").addEventListener("click", () => {
+        const name = document.getElementById("tabNameInput").value.trim();
+        if (!name) {
+          document.getElementById("tabNameInput").focus();
+          return;
+        }
+        const folderId = document.getElementById("folderSelect").value || null;
+
+        if (editingTabId) {
+          const tab = state.tabs.find((t) => t.id === editingTabId);
+          if (tab) {
+            tab.name = name;
+            tab.color = selectedColor;
+            tab.folderId = folderId === "__new__" ? null : folderId;
+          }
+        } else {
+          state.tabs.push({
+            id: "t" + ++state.nextId,
+            name,
+            color: selectedColor,
+            folderId: folderId === "__new__" ? null : folderId,
+            items: [],
+          });
+          state.activeTab = state.tabs[state.tabs.length - 1].id;
+        }
+        hideTabModal();
+        render();
+      });
+
+      document
+        .getElementById("tabNameInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter")
+            document.getElementById("modalConfirm").click();
+        });
+
+      let folderCallback = null;
+      function openFolderModal(cb) {
+        folderCallback = cb;
+        document.getElementById("folderNameInput").value = "";
+        document.getElementById("folderModal").classList.add("visible");
+        setTimeout(
+          () => document.getElementById("folderNameInput").focus(),
+          100,
+        );
+      }
+
+      document.getElementById("folderCancel").addEventListener("click", () => {
+        document.getElementById("folderModal").classList.remove("visible");
+        if (folderCallback) {
+          folderCallback();
+          folderCallback = null;
+        }
+      });
+
+      document.getElementById("folderConfirm").addEventListener("click", () => {
+        const name = document.getElementById("folderNameInput").value.trim();
+        if (!name) {
+          document.getElementById("folderNameInput").focus();
+          return;
+        }
+        const id = "f" + ++state.nextId;
+        state.folders.push({ id, name });
+        document.getElementById("folderModal").classList.remove("visible");
+        if (folderCallback) {
+          folderCallback();
+          setTimeout(() => {
+            const fs = document.getElementById("folderSelect");
+            if (fs) {
+              const opt = document.createElement("option");
+              opt.value = id;
+              opt.textContent = name;
+              opt.selected = true;
+              const newOpt = Array.from(fs.options).find(
+                (o) => o.value === "__new__",
+              );
+              fs.insertBefore(opt, newOpt);
+              fs.value = id;
+            }
+          }, 50);
+          folderCallback = null;
+        } else {
+          render();
+        }
+      });
+
+      document
+        .getElementById("folderNameInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter")
+            document.getElementById("folderConfirm").click();
+        });
+
+      let moveTabId = null;
+      function openMoveModal(tabId) {
+        moveTabId = tabId;
+        const tab = state.tabs.find((t) => t.id === tabId);
+        const sel = document.getElementById("moveFolderSelect");
+        sel.innerHTML = '<option value="">不加入資料夾</option>';
+        state.folders.forEach((f) => {
+          const opt = document.createElement("option");
+          opt.value = f.id;
+          opt.textContent = f.name;
+          if (tab && tab.folderId === f.id) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        document.getElementById("moveModal").classList.add("visible");
+      }
+
+      document.getElementById("moveCancelBtn").addEventListener("click", () => {
+        document.getElementById("moveModal").classList.remove("visible");
+      });
+
+      document
+        .getElementById("moveConfirmBtn")
+        .addEventListener("click", () => {
+          const folderId =
+            document.getElementById("moveFolderSelect").value || null;
+          const tab = state.tabs.find((t) => t.id === moveTabId);
+          if (tab) tab.folderId = folderId;
+          document.getElementById("moveModal").classList.remove("visible");
+          render();
+        });
+
+      document.querySelectorAll(".modal-bg").forEach((bg) => {
+        bg.addEventListener("click", (e) => {
+          if (e.target === bg) bg.classList.remove("visible");
+        });
+      });
+
+      // ===================== HELPERS =====================
+      function escHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // ===================== 【技術點：初始化與事件監聽設定】 =====================
+      loadState();
+      if (!state.activeTab && state.tabs.length)
+        state.activeTab = state.tabs[0].id;
+
+      // 1. 綁定自訂標題的儲存與失焦機制
+      const titleTextEl = document.getElementById("topbarTitleText");
+
+      // 當使用者打完字點擊旁邊（失焦）時觸發儲存
+      titleTextEl.addEventListener("blur", () => {
+        const newTitle = titleTextEl.textContent.trim();
+        state.title = newTitle || "我的計劃本"; // 如果被刪光了，預設還原成我的計劃本
+        saveState();
+      });
+
+      // 當使用者在標題按 Enter 鍵，直接強制失焦儲存
+      titleTextEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault(); // 阻止瀏覽器在 contenteditable 換行
+          titleTextEl.blur(); // 觸發 blur 事件
+        }
+      });
+
+      // 2. 設定大外層的放置事件，允許將分頁「拖拽到空白處以移出任何資料夾」
+      const tabsWrapEl = document.getElementById("tabsWrap");
+      tabsWrapEl.addEventListener("dragover", (e) => {
+        e.preventDefault();
+      });
+      tabsWrapEl.addEventListener("drop", (e) => {
+        // 【利用冒泡判定】如果使用者放開滑鼠的位置「不屬於」任何一個資料夾群組 (.tab-group)
+        if (!e.target.closest(".tab-group")) {
+          e.preventDefault();
+          const tabId = e.dataTransfer.getData("text/plain");
+          const targetTab = state.tabs.find((t) => t.id === tabId);
+          if (targetTab) {
+            targetTab.folderId = null; // 清除資料夾綁定（移到外面）
+            render();
+          }
+        }
+      });
+
+      // 開始初次畫面渲染
+      render();
+    </script>
+  </body>
+</html>
