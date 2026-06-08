@@ -1,1714 +1,1143 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-TW">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-    />
-    <title>✨ 我的計劃本</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@400;500;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="icon" href="favicon.svg" type="image/svg+xml">
-    <style>
-      :root {
-        --cream: #faf7f2;
-        --cream2: #f4efe6;
-        --cream3: #ede6d8;
-        --brown-light: #c4a882;
-        --brown: #9b7b5a;
-        --brown-dark: #6b5240;
-        --pink: #f2a7b8;
-        --pink-light: #fce8ee;
-        --green: #7bc8a4;
-        --green-light: #e8f7f0;
-        --yellow: #f7d98c;
-        --yellow-light: #fef8e7;
-        --blue: #a7c4e8;
-        --blue-light: #eaf2fb;
-        --purple: #c4a8e8;
-        --purple-light: #f3edfb;
-        --text: #5c4a38;
-        --text-muted: #9b8878;
-        --border: #e2d8cc;
-        --shadow: rgba(156, 123, 90, 0.12);
-        --radius: 16px;
-        --radius-sm: 10px;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>✨ 我的計劃本（協作版）</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    /* 使用變數定義所有顏色，方便切換主題 */
+    :root {
+      --cream: #faf7f2;
+      --cream2: #f4efe6;
+      --cream3: #ede6d8;
+      --brown-light: #c4a882;
+      --brown: #9b7b5a;
+      --brown-dark: #6b5240;
+      --pink: #f2a7b8;
+      --pink-light: #fce8ee;
+      --green: #7bc8a4;
+      --green-light: #e8f7f0;
+      --yellow: #f7d98c;
+      --yellow-light: #fef8e7;
+      --blue: #a7c4e8;
+      --blue-light: #eaf2fb;
+      --purple: #c4a8e8;
+      --purple-light: #f3edfb;
+      --text: #5c4a38;
+      --text-muted: #9b8878;
+      --border: #e2d8cc;
+      --shadow: rgba(156, 123, 90, 0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-      body {
-        font-family: "Nunito", "Zen Maru Gothic", sans-serif;
-        background: var(--cream);
-        color: var(--text);
-        min-height: 100vh;
-        overflow-x: hidden;
-      }
+    body {
+      font-family: "Nunito", "Zen Maru Gothic", sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-      /* === TOP BAR === */
-      .topbar {
-        background: var(--cream);
-        border-bottom: 1.5px solid var(--border);
-        padding: 14px 20px 0;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        box-shadow: 0 2px 12px var(--shadow);
-      }
+    /* ════════════════════════════════════════════════
+       登入 / 房間加入介面
+    ════════════════════════════════════════════════ */
+    #loginScreen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--cream2) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
 
-      .topbar-title {
-        font-size: 20px;
-        font-weight: 800;
-        color: var(--brown-dark);
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
+    .login-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 12px 40px var(--shadow);
+      animation: slideUp 0.3s ease-out;
+    }
 
-      #topbarTitleText {
-        outline: none;
-        transition: background 0.2s;
-        border-radius: var(--radius-sm);
-        padding: 2px 6px;
-        cursor: pointer;
-      }
-      #topbarTitleText:focus {
-        background: var(--cream2);
-        box-shadow: 0 0 0 1.5px var(--border);
-      }
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
 
-      .title-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--pink);
-        display: inline-block;
-        animation: pulse 2s ease-in-out infinite;
-      }
+    .login-card h1 {
+      font-size: 28px;
+      margin-bottom: 24px;
+      color: var(--brown-dark);
+    }
 
-      @keyframes pulse {
-        0%,
-        100% {
-          transform: scale(1);
-          opacity: 1;
-        }
-        50% {
-          transform: scale(1.3);
-          opacity: 0.7;
-        }
-      }
+    .form-group {
+      margin-bottom: 16px;
+    }
 
-      /* === TABS STRIP === */
-      .tabs-wrap {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        overflow-x: auto;
-        padding-bottom: 0;
-        scrollbar-width: none;
-      }
-      .tabs-wrap::-webkit-scrollbar {
-        display: none;
-      }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
 
-      .tab-group {
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        padding: 3px;
-        background: var(--cream2);
-        border-radius: var(--radius) var(--radius) 0 0;
-        border: 1.5px solid var(--border);
-        border-bottom: none;
-        position: relative;
-        transition: all 0.2s;
-      }
+    .form-group input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s;
+    }
 
-      .tab-group.dragover {
-        background: var(--cream3);
-        border-color: var(--brown);
-        transform: scale(1.02);
-      }
+    .form-group input:focus {
+      border-color: var(--brown-light);
+      background: white;
+    }
 
-      .folder-icon {
-        font-size: 13px;
-        font-weight: 700;
-        padding: 5px 10px;
-        border-radius: 8px;
-        cursor: pointer;
-        user-select: none;
-        transition: background 0.2s;
-        color: var(--brown);
-        white-space: nowrap;
-      }
-      .folder-icon:hover {
-        background: var(--cream3);
-      }
+    .login-buttons {
+      display: flex;
+      gap: 10px;
+    }
 
-      .tab {
-        position: relative;
-        padding: 7px 14px;
-        border-radius: 10px 10px 0 0;
-        cursor: grab;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-muted);
-        white-space: nowrap;
-        user-select: none;
-        transition: all 0.2s;
-        border: 1.5px solid transparent;
-        border-bottom: none;
-        background: transparent;
-        min-width: 60px;
-        text-align: center;
-        -webkit-tap-highlight-color: transparent;
-      }
-      .tab:active {
-        cursor: grabbing;
-      }
-      .tab.dragging {
-        opacity: 0.4;
-        border: 1.5px dashed var(--brown-light);
-      }
+    .btn-primary, .btn-secondary {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
 
-      .tab:hover {
-        color: var(--text);
-        background: var(--cream3);
-      }
+    .btn-primary {
+      background: var(--brown-dark);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--brown); transform: translateY(-1px); }
 
-      .tab.active {
-        background: var(--cream);
-        color: var(--brown-dark);
-        border-color: var(--border);
-        border-bottom-color: var(--cream);
-        margin-bottom: -1.5px;
-        z-index: 1;
-      }
+    .btn-secondary {
+      background: var(--cream2);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--cream3); }
 
-      .tab .tab-color-dot {
-        display: inline-block;
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        margin-right: 5px;
-        vertical-align: middle;
-      }
+    /* 狀態提示 */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
 
-      .add-tab-btn {
-        padding: 7px 10px;
-        font-size: 18px;
-        color: var(--brown-light);
-        cursor: pointer;
-        border-radius: var(--radius-sm);
-        transition: all 0.2s;
-        user-select: none;
-        flex-shrink: 0;
-        line-height: 1;
-      }
-      .add-tab-btn:hover {
-        color: var(--brown);
-        background: var(--cream2);
-      }
+    .status-online {
+      background: var(--green-light);
+      color: var(--green);
+    }
 
-      /* === MAIN CONTENT === */
-      .main {
-        padding: 20px 16px 100px;
-        max-width: 680px;
-        margin: 0 auto;
-      }
+    .status-offline {
+      background: #ffebee;
+      color: #c53030;
+    }
 
-      .page {
-        display: none;
-      }
-      .page.active {
-        display: block;
-      }
+    /* 複製房間代碼 */
+    .room-code-section {
+      background: var(--yellow-light);
+      border: 1.5px solid var(--yellow);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin: 20px 0;
+      text-align: center;
+    }
 
-      /* === LIST HEADER === */
-      .list-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 16px;
-      }
+    .room-code {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--brown-dark);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 4px;
+      margin: 8px 0;
+    }
 
-      .list-title {
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--brown-dark);
-      }
+    .copy-btn {
+      background: var(--brown-dark);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: var(--brown); }
+    .copy-btn.copied { background: var(--green); }
 
-      .list-subtitle {
-        font-size: 12px;
-        color: var(--text-muted);
-        margin-top: 2px;
-      }
+    /* ════════════════════════════════════════════════
+       主應用介面
+    ════════════════════════════════════════════════ */
+    #appScreen {
+      display: none;
+    }
 
-      .add-item-btn {
-        background: var(--brown-dark);
-        color: white;
-        border: none;
-        border-radius: 50px;
-        padding: 8px 18px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        font-family: inherit;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-      .add-item-btn:hover {
-        background: var(--brown);
-        transform: translateY(-1px);
-      }
-      .add-item-btn:active {
-        transform: scale(0.97);
-      }
+    /* 頂部列 */
+    .topbar {
+      background: var(--cream);
+      border-bottom: 1.5px solid var(--border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
 
-      /* === ADD FORM === */
-      .add-form {
-        background: white;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius);
-        padding: 14px 16px;
-        margin-bottom: 14px;
-        display: none;
-        box-shadow: 0 2px 12px var(--shadow);
-      }
-      .add-form.visible {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-      }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
 
-      .add-form input {
-        flex: 1;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 9px 13px;
-        font-size: 14px;
-        font-family: inherit;
-        color: var(--text);
-        background: var(--cream);
-        outline: none;
-        transition: border-color 0.2s;
-      }
-      .add-form input:focus {
-        border-color: var(--brown-light);
-        background: white;
-      }
-      .add-form input::placeholder {
-        color: var(--text-muted);
-      }
+    .topbar-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--brown-dark);
+    }
 
-      .confirm-btn {
-        background: var(--pink);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        padding: 9px 16px;
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-        font-family: inherit;
-        transition: all 0.2s;
-      }
-      .confirm-btn:hover {
-        background: #e8919e;
-      }
+    .online-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .online-indicator.offline {
+      background: #d32f2f;
+      animation: none;
+    }
 
-      /* === TODO ITEMS === */
-      .todo-list {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
 
-      .todo-item {
-        position: relative;
-        overflow: hidden;
-        border-radius: var(--radius);
-        user-select: none;
-      }
+    .topbar-users {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
 
-      .todo-inner {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        background: white;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius);
-        padding: 12px 14px;
-        transition:
-          transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-          box-shadow 0.2s;
-        position: relative;
-        z-index: 1;
-        will-change: transform;
-      }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-      .todo-item:hover .todo-inner {
-        box-shadow: 0 3px 14px var(--shadow);
-      }
+    .room-info-btn, .leave-btn {
+      padding: 6px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .room-info-btn:hover { background: var(--cream2); color: var(--text); }
+    .leave-btn:hover { border-color: #d32f2f; color: #d32f2f; }
 
-      .delete-bg {
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: 80px;
-        background: #ff6b6b;
-        border-radius: var(--radius);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 18px;
-        z-index: 0;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
-      .delete-bg:hover {
-        background: #ff4d4d;
-      }
+    /* 主要內容 */
+    .main-content {
+      padding: 20px 16px 100px;
+      max-width: 680px;
+      margin: 0 auto;
+    }
 
-      /* === CHECKBOX === */
-      .check-btn {
-        width: 28px;
-        height: 28px;
-        border: 2px solid var(--border);
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0;
-        flex-shrink: 0;
-        transition: all 0.2s;
-        background: white;
-        position: relative;
-        overflow: hidden;
-      }
-      .check-btn:hover {
-        border-color: var(--brown-light);
-        background: var(--cream);
-      }
+    /* 分頁列 */
+    .tabs-strip {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
 
-      @keyframes smileIn {
-        0% {
-          transform: scale(0) rotate(-20deg);
-          opacity: 0;
-        }
-        60% {
-          transform: scale(1.3) rotate(5deg);
-          opacity: 1;
-        }
-        100% {
-          transform: scale(1) rotate(0deg);
-          opacity: 1;
-        }
-      }
+    .tab {
+      padding: 8px 14px;
+      border-radius: 10px 10px 0 0;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1.5px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+      user-select: none;
+    }
 
-      .check-btn .smile {
-        font-size: 16px;
-        display: none;
-        animation: smileIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-      }
-      .check-btn .checkmark {
-        font-size: 14px;
-        display: none;
-        color: var(--green);
-      }
-      .check-btn .ring {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        border: 2px solid var(--green);
-        opacity: 0;
-        transform: scale(1);
-        pointer-events: none;
-      }
+    .tab:hover { color: var(--text); background: var(--cream2); }
 
-      @keyframes ringPop {
-        0% {
-          transform: scale(1);
-          opacity: 0.7;
-        }
-        100% {
-          transform: scale(1.8);
-          opacity: 0;
-        }
-      }
+    .tab.active {
+      color: var(--brown-dark);
+      background: white;
+      border-color: var(--border);
+      border-bottom-color: white;
+    }
 
-      .check-btn.smiling .smile {
-        display: block;
-      }
-      .check-btn.smiling {
-        border-color: var(--yellow);
-        background: var(--yellow-light);
-      }
-      .check-btn.done {
-        border-color: var(--green);
-        background: var(--green-light);
-      }
-      .check-btn.done .checkmark {
-        display: block;
-      }
-      .check-btn.done .ring {
-        animation: ringPop 0.5s ease-out forwards;
-      }
+    .tab-add {
+      padding: 8px 12px;
+      color: var(--brown-light);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+      font-size: 16px;
+    }
+    .tab-add:hover { color: var(--brown); background: var(--cream2); }
 
-      .todo-text {
-        flex: 1;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text);
-        line-height: 1.4;
-        transition: all 0.3s;
-      }
+    /* 清單 */
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-      .todo-item.done .todo-text {
-        text-decoration: line-through;
-        color: var(--text-muted);
-        opacity: 0.7;
-      }
+    .todo-item {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
 
-      .empty-state {
-        text-align: center;
-        padding: 48px 20px;
-        color: var(--text-muted);
-      }
-      .empty-state .empty-icon {
-        font-size: 48px;
-        margin-bottom: 12px;
-        opacity: 0.5;
-      }
-      .empty-state p {
-        font-size: 14px;
-        font-weight: 600;
-      }
+    .todo-item:hover { box-shadow: 0 3px 14px var(--shadow); }
 
-      /* === CONTEXT MENU === */
-      .ctx-menu {
-        position: fixed;
-        background: white;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius-sm);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-        z-index: 999;
-        overflow: hidden;
-        min-width: 150px;
-        display: none;
-        animation: menuIn 0.15s ease-out;
-      }
-      @keyframes menuIn {
-        from {
-          opacity: 0;
-          transform: scale(0.92);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
-      }
-      .ctx-menu.visible {
-        display: block;
-      }
-      .ctx-item {
-        padding: 10px 16px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: background 0.15s;
-        color: var(--text);
-      }
-      .ctx-item:hover {
-        background: var(--cream);
-      }
-      .ctx-item.danger {
-        color: #e24b4a;
-      }
-      .ctx-item.danger:hover {
-        background: #fcebeb;
-      }
+    .todo-item.done {
+      opacity: 0.7;
+      background: var(--cream2);
+    }
 
-      /* === MODAL === */
-      .modal-bg {
-        position: fixed;
-        inset: 0;
-        background: rgba(91, 70, 56, 0.35);
-        z-index: 500;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        backdrop-filter: blur(2px);
-      }
-      .modal-bg.visible {
-        display: flex;
-      }
+    .todo-item.done .todo-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
 
-      .modal {
-        background: var(--cream);
-        border-radius: var(--radius);
-        padding: 24px;
-        width: 100%;
-        max-width: 360px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-        animation: modalIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      }
-      @keyframes modalIn {
-        from {
-          transform: scale(0.85);
-          opacity: 0;
-        }
-        to {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
-      .modal h3 {
-        font-size: 18px;
-        font-weight: 800;
-        margin-bottom: 16px;
-        color: var(--brown-dark);
-      }
+    .todo-checkbox {
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      flex-shrink: 0;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
 
-      .modal input,
-      .modal select {
-        width: 100%;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 10px 13px;
-        font-size: 14px;
-        font-family: inherit;
-        color: var(--text);
-        background: white;
-        outline: none;
-        margin-bottom: 10px;
-        transition: border-color 0.2s;
-      }
-      .modal input:focus,
-      .modal select:focus {
-        border-color: var(--brown-light);
-      }
+    .todo-checkbox:hover { border-color: var(--brown-light); }
 
-      .color-picker {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 14px;
-        flex-wrap: wrap;
-      }
-      .color-swatch {
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        cursor: pointer;
-        border: 2.5px solid transparent;
-        transition:
-          transform 0.15s,
-          border-color 0.15s;
-        flex-shrink: 0;
-      }
-      .color-swatch:hover {
-        transform: scale(1.15);
-      }
-      .color-swatch.selected {
-        border-color: var(--brown-dark);
-        transform: scale(1.1);
-      }
+    .todo-checkbox.done {
+      border-color: var(--green);
+      background: var(--green-light);
+      color: var(--green);
+    }
 
-      .modal-actions {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-end;
-        margin-top: 6px;
-      }
-      .btn-ghost {
-        background: none;
-        border: 1.5px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 8px 16px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        font-family: inherit;
-        color: var(--text-muted);
-        transition: all 0.15s;
-      }
-      .btn-ghost:hover {
-        background: var(--cream2);
-        color: var(--text);
-      }
-      .btn-primary {
-        background: var(--brown-dark);
-        color: white;
-        border: none;
-        border-radius: var(--radius-sm);
-        padding: 8px 20px;
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        font-family: inherit;
-        transition: all 0.15s;
-      }
-      .btn-primary:hover {
-        background: var(--brown);
-      }
+    .todo-text {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.4;
+    }
 
-      .progress-bar {
-        height: 5px;
-        background: var(--cream3);
-        border-radius: 10px;
-        margin-bottom: 16px;
-        overflow: hidden;
-      }
-      .progress-fill {
-        height: 100%;
-        background: var(--green);
-        border-radius: 10px;
-        transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-      }
+    .todo-delete {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: none;
+      color: #d32f2f;
+      cursor: pointer;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.2s;
+    }
 
-      .confetti-piece {
-        position: fixed;
-        width: 8px;
-        height: 8px;
-        border-radius: 2px;
-        pointer-events: none;
-        z-index: 9999;
-        animation: confettiFall 1.2s ease-in forwards;
-      }
-      @keyframes confettiFall {
-        0% {
-          transform: translateY(-20px) rotate(0deg);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(60vh) rotate(720deg);
-          opacity: 0;
-        }
-      }
+    .todo-item:hover .todo-delete { opacity: 1; }
 
-      .swipe-hint {
-        font-size: 11px;
-        color: var(--text-muted);
-        text-align: right;
-        margin-bottom: 6px;
-      }
+    .todo-delete:hover { transform: scale(1.2); }
 
-      ::-webkit-scrollbar {
-        width: 5px;
-        height: 5px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: var(--cream3);
-        border-radius: 10px;
-      }
+    /* 新增輸入框 */
+    .add-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
 
-      @media (max-width: 480px) {
-        .main {
-          padding: 16px 12px 100px;
-        }
-        .topbar {
-          padding: 12px 12px 0;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="topbar">
-      <div class="topbar-title">
-        <span class="title-dot"></span>
-        <span id="topbarTitleText" contenteditable="true">我的計劃本</span>
-      </div>
-      <div class="tabs-wrap" id="tabsWrap">
-        <div class="add-tab-btn" id="addTabBtn" title="新增分頁">＋</div>
-      </div>
+    .add-form input {
+      flex: 1;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 13px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .add-form input:focus { border-color: var(--brown-light); background: white; }
+
+    .add-btn {
+      background: var(--pink);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 9px 16px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .add-btn:hover { background: #e8919e; }
+
+    /* 空狀態 */
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+    /* Modal */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(91, 70, 56, 0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+
+    .modal-bg.visible { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: var(--radius);
+      padding: 24px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .modal h2 {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: var(--brown-dark);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    .sync-status {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--text-muted);
+      box-shadow: 0 4px 12px var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sync-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+
+    .sync-dot.pending {
+      background: var(--yellow);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @media (max-width: 480px) {
+      .main-content { padding: 16px 12px 100px; }
+      .topbar { padding: 12px 16px; }
+      .topbar-title { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     登入畫面（房間加入）
+════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <h1>✨ 計劃本協作</h1>
+
+    <div id="statusBadge" class="status-badge status-offline">🔴 離線</div>
+
+    <div class="form-group">
+      <label>你的名字</label>
+      <input type="text" id="nicknameInput" placeholder="例：小美" maxlength="20" />
     </div>
 
-    <div class="main" id="mainContent"></div>
-
-    <div class="ctx-menu" id="ctxMenu">
-      <div class="ctx-item" id="ctxRename">✏️ 重新命名</div>
-      <div class="ctx-item" id="ctxMove">📁 移到資料夾</div>
-      <div class="ctx-item danger" id="ctxDelete">🗑️ 刪除分頁</div>
+    <div class="form-group">
+      <label>房間代碼（或留空建立新房間）</label>
+      <input type="text" id="roomCodeInput" placeholder="例：ABC12345" maxlength="8" />
     </div>
 
-    <div class="ctx-menu" id="folderCtxMenu">
-      <div class="ctx-item" id="ctxFolderRename">✏️ 重新命名資料夾</div>
-      <div class="ctx-item danger" id="ctxFolderDelete">🗑️ 刪除資料夾</div>
+    <div class="login-buttons">
+      <button class="btn-primary" onclick="app.createRoom()">建立新房間</button>
+      <button class="btn-secondary" onclick="app.joinRoom()">加入房間</button>
     </div>
 
-    <div class="modal-bg" id="tabModal">
-      <div class="modal">
-        <h3 id="modalTitle">新增分頁</h3>
-        <input
-          type="text"
-          id="tabNameInput"
-          placeholder="分頁名稱"
-          maxlength="20"
-        />
-        <div
-          style="
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 600;
-          "
-        >
-          選擇顏色
-        </div>
-        <div class="color-picker" id="colorPicker"></div>
-        <div
-          style="
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 600;
-          "
-        >
-          加入資料夾（選填）
-        </div>
-        <select id="folderSelect">
-          <option value="">不加入資料夾</option>
-        </select>
-        <div class="modal-actions">
-          <button class="btn-ghost" id="modalCancel">取消</button>
-          <button class="btn-primary" id="modalConfirm">確認</button>
-        </div>
-      </div>
+    <!-- 已加入房間後顯示 -->
+    <div id="roomCodeSection" class="room-code-section" style="display: none;">
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">📌 房間代碼</div>
+      <div class="room-code" id="displayRoomCode"></div>
+      <button class="copy-btn" onclick="app.copyRoomCode()">📋 複製代碼</button>
+      <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">分享給朋友，他們可以用這個代碼加入</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     主應用（計劃本）
+════════════════════════════════════════════ -->
+<div id="appScreen">
+  <!-- 頂部列 -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="online-indicator" id="onlineIndicator"></div>
+      <div class="topbar-title" id="appTitle">我的計劃本</div>
+    </div>
+    <div class="topbar-users" id="userCount">1 人在線</div>
+    <div class="topbar-right">
+      <button class="room-info-btn" onclick="app.showRoomInfo()">📍 房間</button>
+      <button class="leave-btn" onclick="app.leaveRoom()">🚪 離開</button>
+    </div>
+  </div>
+
+  <!-- 主要內容 -->
+  <div class="main-content">
+    <!-- 分頁列 -->
+    <div class="tabs-strip" id="tabsStrip">
+      <span class="tab-add" onclick="app.addTab()">＋</span>
     </div>
 
-    <div class="modal-bg" id="folderModal">
-      <div class="modal">
-        <h3 id="folderModalTitle">新增資料夾</h3>
-        <input
-          type="text"
-          id="folderNameInput"
-          placeholder="資料夾名稱"
-          maxlength="20"
-        />
-        <div class="modal-actions">
-          <button class="btn-ghost" id="folderCancel">取消</button>
-          <button class="btn-primary" id="folderConfirm">確認</button>
-        </div>
-      </div>
-    </div>
+    <!-- 待辦列表 -->
+    <div id="tabContent"></div>
+  </div>
 
-    <div class="modal-bg" id="moveModal">
-      <div class="modal">
-        <h3>移到資料夾</h3>
-        <select id="moveFolderSelect">
-          <option value="">不加入資料夾</option>
-        </select>
-        <div class="modal-actions">
-          <button class="btn-ghost" id="moveCancelBtn">取消</button>
-          <button class="btn-primary" id="moveConfirmBtn">確認</button>
-        </div>
-      </div>
-    </div>
+  <!-- 同步狀態 -->
+  <div class="sync-status">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncText">已同步</span>
+  </div>
+</div>
 
-    <script>
-      // ===================== STATE (狀態管理) =====================
-      let state = {
-        title: "我的計劃本",
-        folders: [
-          { id: "f1", name: "生活" },
-          { id: "f2", name: "工作" },
-        ],
-        tabs: [
-          {
-            id: "t1",
-            name: "今日待辦",
-            color: "#F2A7B8",
-            folderId: "f1",
-            items: [
-              { id: "i1", text: "喝 8 杯水 💧", done: false },
-              { id: "i2", text: "讀書 30 分鐘 📖", done: false },
-              { id: "i3", text: "整理房間 🧹", done: true },
-            ],
-          },
-          {
-            id: "t2",
-            name: "購物清單",
-            color: "#7BC8A4",
-            folderId: "f1",
-            items: [
-              { id: "i4", text: "牛奶", done: false },
-              { id: "i5", text: "蔬菜沙拉材料", done: false },
-            ],
-          },
-          {
-            id: "t3",
-            name: "工作任務",
-            color: "#A7C4E8",
-            folderId: "f2",
-            items: [
-              { id: "i6", text: "完成週報", done: false },
-              { id: "i7", text: "回覆 Email", done: true },
-            ],
-          },
-        ],
-        activeTab: "t1",
-        nextId: 100,
+<!-- 房間資訊 Modal -->
+<div id="roomInfoModal" class="modal-bg">
+  <div class="modal">
+    <h2>📍 房間資訊</h2>
+    <div style="margin-bottom: 16px;">
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">房間代碼</div>
+      <div style="font-size: 18px; font-weight: 800; font-family: monospace; letter-spacing: 2px;" id="modalRoomCode"></div>
+    </div>
+    <div style="margin-bottom: 16px;">
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">在線人數</div>
+      <div style="font-size: 18px; font-weight: 800;" id="modalUserCount"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="document.getElementById('roomInfoModal').classList.remove('visible')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/**
+ * 🎯 多人協作計劃本客戶端
+ * ═════════════════════════════════════════
+ * 功能：
+ *   ✨ WebSocket 即時同步
+ *   💾 localStorage 離線支援
+ *   👥 多人協作
+ *   🔔 即時通知
+ * ═════════════════════════════════════════
+ */
+
+const app = {
+  /* ────────────────────────────────────────
+     應用狀態
+  ────────────────────────────────────────── */
+  state: {
+    roomId: null,
+    userId: null,
+    nickname: null,
+    isOnline: false,
+    usersCount: 1,
+    rooms: new Map(),      /* roomId → room data */
+    folders: [],
+    tabs: [],
+    items: [],
+    activeTab: null
+  },
+
+  ws: null,              /* WebSocket 連接 */
+  serverUrl: null,       /* 伺服器地址（自動檢測） */
+  reconnectAttempts: 0,
+  maxReconnectAttempts: 10,
+
+  /* ────────────────────────────────────────
+     初始化
+  ────────────────────────────────────────── */
+  init() {
+    // 自動檢測伺服器地址
+    const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    this.serverUrl = {
+      http: `${protocol}//${window.location.host}`,
+      ws: `${wsProtocol}//${window.location.host}`
+    };
+
+    // 載入本地儲存的狀態
+    const saved = localStorage.getItem('plannerUser');
+    if (saved) {
+      const user = JSON.parse(saved);
+      document.getElementById('nicknameInput').value = user.nickname;
+      document.getElementById('roomCodeInput').value = user.lastRoomId || '';
+    }
+
+    console.log('✅ 應用初始化完成，伺服器地址:', this.serverUrl.http);
+  },
+
+  /* ────────────────────────────────────────
+     建立新房間
+  ────────────────────────────────────────── */
+  async createRoom() {
+    const nickname = document.getElementById('nicknameInput').value.trim();
+    if (!nickname) {
+      alert('請輸入你的名字');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${this.serverUrl.http}/api/rooms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await response.json();
+      
+      this.state.roomId = data.roomId;
+      this.state.nickname = nickname;
+      this.state.userId = this.generateUserId();
+      
+      this.saveUserInfo();
+      this.showRoomCode();
+      this.connect();
+    } catch (e) {
+      console.error('建立房間失敗:', e);
+      alert('無法連接伺服器，請檢查網路');
+    }
+  },
+
+  /* ────────────────────────────────────────
+     加入現有房間
+  ────────────────────────────────────────── */
+  async joinRoom() {
+    const nickname = document.getElementById('nicknameInput').value.trim();
+    const roomCode = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+
+    if (!nickname) {
+      alert('請輸入你的名字');
+      return;
+    }
+
+    if (!roomCode) {
+      alert('請輸入房間代碼');
+      return;
+    }
+
+    try {
+      /* 驗證房間是否存在 */
+      const response = await fetch(
+        `${this.serverUrl.http}/api/rooms/${roomCode}`
+      );
+      if (!response.ok) throw new Error('房間不存在');
+
+      this.state.roomId = roomCode;
+      this.state.nickname = nickname;
+      this.state.userId = this.generateUserId();
+
+      this.saveUserInfo();
+      this.connect();
+    } catch (e) {
+      console.error('加入房間失敗:', e);
+      alert('房間不存在或無法連接');
+    }
+  },
+
+  /* ────────────────────────────────────────
+     連接到伺服器
+  ────────────────────────────────────────── */
+  connect() {
+    if (this.ws) return;
+
+    console.log('🔗 連接到伺服器...');
+    this.ws = new WebSocket(this.serverUrl.ws);
+
+    this.ws.onopen = () => {
+      console.log('✅ WebSocket 已連接');
+      this.reconnectAttempts = 0;
+      this.state.isOnline = true;
+      this.updateOnlineStatus();
+
+      /* 通知伺服器加入房間 */
+      this.send({
+        type: 'join',
+        roomId: this.state.roomId,
+        userId: this.state.userId,
+        nickname: this.state.nickname
+      });
+
+      /* 要求完整同步 */
+      this.send({ type: 'sync' });
+    };
+
+    this.ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      this.handleMessage(msg);
+    };
+
+    this.ws.onclose = () => {
+      console.log('❌ WebSocket 已斷開');
+      this.state.isOnline = false;
+      this.updateOnlineStatus();
+      this.ws = null;
+
+      /* 自動重連 */
+      if (this.reconnectAttempts < this.maxReconnectAttempts) {
+        this.reconnectAttempts++;
+        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
+        console.log(`⏳ ${(delay / 1000).toFixed(0)} 秒後重連...`);
+        setTimeout(() => this.connect(), delay);
+      }
+    };
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket 錯誤:', error);
+    };
+  },
+
+  /* ────────────────────────────────────────
+     發送訊息到伺服器
+  ────────────────────────────────────────── */
+  send(msg) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(msg));
+      this.showSyncStatus('pending');
+    }
+  },
+
+  /* ────────────────────────────────────────
+     處理來自伺服器的訊息
+  ────────────────────────────────────────── */
+  handleMessage(msg) {
+    console.log('📨 收到訊息:', msg.type);
+
+    switch (msg.type) {
+      case 'joined':
+        this.showApp();
+        break;
+
+      case 'state-sync':
+        /* 完整同步：用伺服器資料覆蓋本地 */
+        this.state.tabs = msg.tabs || [];
+        this.state.folders = msg.folders || [];
+        this.state.items = msg.items || [];
+        this.state.activeTab = this.state.tabs[0]?.id || null;
+        this.render();
+        this.showSyncStatus('synced');
+        break;
+
+      case 'action':
+        /* 其他人的操作 */
+        this.applyRemoteAction(msg);
+        break;
+
+      case 'user-joined':
+        this.state.usersCount = msg.usersCount;
+        this.updateUserCount();
+        console.log(`👥 ${msg.nickname} 加入房間`);
+        break;
+    }
+  },
+
+  /* ────────────────────────────────────────
+     套用遠端操作（其他人的改動）
+  ────────────────────────────────────────── */
+  applyRemoteAction(msg) {
+    const { action, targetType, targetId, data } = msg;
+
+    switch (action) {
+      case 'create':
+        if (targetType === 'tab') {
+          if (!this.state.tabs.find(t => t.id === targetId)) {
+            this.state.tabs.push({ id: targetId, ...data });
+          }
+        } else if (targetType === 'item') {
+          if (!this.state.items.find(i => i.id === targetId)) {
+            this.state.items.push({ id: targetId, ...data });
+          }
+        }
+        break;
+
+      case 'update':
+        if (targetType === 'tab') {
+          const tab = this.state.tabs.find(t => t.id === targetId);
+          if (tab) Object.assign(tab, data);
+        } else if (targetType === 'item') {
+          const item = this.state.items.find(i => i.id === targetId);
+          if (item) Object.assign(item, data);
+        }
+        break;
+
+      case 'delete':
+        if (targetType === 'tab') {
+          this.state.tabs = this.state.tabs.filter(t => t.id !== targetId);
+          this.state.items = this.state.items.filter(i => i.tabId !== targetId);
+        } else if (targetType === 'item') {
+          this.state.items = this.state.items.filter(i => i.id !== targetId);
+        }
+        break;
+    }
+
+    this.render();
+  },
+
+  /* ────────────────────────────────────────
+     UI 操作
+  ────────────────────────────────────────── */
+  addTab() {
+    const name = prompt('分頁名稱：');
+    if (!name) return;
+
+    const tabId = this.generateId();
+    this.send({
+      type: 'action',
+      userId: this.state.userId,
+      action: 'create',
+      targetType: 'tab',
+      targetId: tabId,
+      data: { name, color: '#F2A7B8', folderId: null }
+    });
+
+    /* 樂觀更新：本地先加，不等伺服器回應 */
+    this.state.tabs.push({
+      id: tabId,
+      name,
+      color: '#F2A7B8',
+      folderId: null
+    });
+    this.state.activeTab = tabId;
+    this.render();
+  },
+
+  addItem(tabId) {
+    const text = prompt('待辦內容：');
+    if (!text) return;
+
+    const itemId = this.generateId();
+    this.send({
+      type: 'action',
+      userId: this.state.userId,
+      action: 'create',
+      targetType: 'item',
+      targetId: itemId,
+      data: { tabId, text, done: 0 }
+    });
+
+    this.state.items.push({
+      id: itemId,
+      tabId,
+      text,
+      done: 0
+    });
+    this.render();
+  },
+
+  toggleItem(itemId) {
+    const item = this.state.items.find(i => i.id === itemId);
+    if (!item) return;
+
+    item.done = item.done ? 0 : 1;
+    this.send({
+      type: 'action',
+      userId: this.state.userId,
+      action: 'update',
+      targetType: 'item',
+      targetId: itemId,
+      data: { done: item.done }
+    });
+
+    this.render();
+  },
+
+  deleteItem(itemId) {
+    if (!confirm('確定要刪除？')) return;
+
+    this.send({
+      type: 'action',
+      userId: this.state.userId,
+      action: 'delete',
+      targetType: 'item',
+      targetId: itemId
+    });
+
+    this.state.items = this.state.items.filter(i => i.id !== itemId);
+    this.render();
+  },
+
+  /* ────────────────────────────────────────
+     渲染 UI
+  ────────────────────────────────────────── */
+  render() {
+    const tabsStrip = document.getElementById('tabsStrip');
+    const tabContent = document.getElementById('tabContent');
+
+    /* 清空舊的分頁按鈕 */
+    tabsStrip.innerHTML = '<span class="tab-add" onclick="app.addTab()">＋</span>';
+
+    /* 渲染分頁 */
+    this.state.tabs.forEach(tab => {
+      const btn = document.createElement('div');
+      btn.className = 'tab' + (this.state.activeTab === tab.id ? ' active' : '');
+      btn.textContent = tab.name;
+      btn.onclick = () => {
+        this.state.activeTab = tab.id;
+        this.render();
       };
+      tabsStrip.appendChild(btn);
+    });
 
-      const TAB_COLORS = [
-        "#F2A7B8",
-        "#7BC8A4",
-        "#F7D98C",
-        "#A7C4E8",
-        "#C4A8E8",
-        "#F2C4A8",
-        "#A8E8D4",
-        "#E8A7C4",
-      ];
+    /* 渲染分頁內容 */
+    const activeTab = this.state.tabs.find(t => t.id === this.state.activeTab);
+    if (!activeTab) {
+      tabContent.innerHTML = '<div class="empty-state"><div class="empty-icon">🌸</div><p>建立第一個分頁吧！</p></div>';
+      return;
+    }
 
-      // ===================== SAVE/LOAD =====================
-      function saveState() {
-        try {
-          localStorage.setItem("plannerState", JSON.stringify(state));
-        } catch (e) {}
-      }
-      function loadState() {
-        try {
-          const s = localStorage.getItem("plannerState");
-          if (s) {
-            state = JSON.parse(s);
-            if (!state.title) state.title = "我的計劃本";
-          }
-        } catch (e) {}
-      }
+    const tabItems = this.state.items.filter(i => i.tabId === activeTab.id);
+    const doneCount = tabItems.filter(i => i.done).length;
+    const progress = tabItems.length ? Math.round(doneCount / tabItems.length * 100) : 0;
 
-      // ===================== RENDER (畫面渲染) =====================
-      function render() {
-        const titleEl = document.getElementById("topbarTitleText");
-        if (document.activeElement !== titleEl) {
-          titleEl.textContent = state.title || "我的計劃本";
-        }
+    let html = `
+      <div style="margin-bottom: 16px;">
+        <div style="font-size: 22px; font-weight: 800; color: var(--brown-dark); margin-bottom: 4px;">${activeTab.name}</div>
+        <div style="font-size: 12px; color: var(--text-muted);">${doneCount}/${tabItems.length} 完成 · ${progress}%</div>
+      </div>
+    `;
 
-        renderTabs();
-        renderPages();
-        saveState();
-      }
-
-      function renderTabs() {
-        const wrap = document.getElementById("tabsWrap");
-        const addBtn = document.getElementById("addTabBtn");
-
-        wrap.querySelectorAll(".tab, .tab-group").forEach((el) => el.remove());
-
-        const grouped = {};
-        const ungrouped = [];
-        state.tabs.forEach((tab) => {
-          if (tab.folderId) {
-            if (!grouped[tab.folderId]) grouped[tab.folderId] = [];
-            grouped[tab.folderId].push(tab);
-          } else {
-            ungrouped.push(tab);
-          }
-        });
-
-        ungrouped.forEach((tab) => {
-          const el = makeTabEl(tab);
-          wrap.insertBefore(el, addBtn);
-        });
-
-        state.folders.forEach((folder) => {
-          const tabs = grouped[folder.id] || [];
-
-          const group = document.createElement("div");
-          group.className = "tab-group";
-          group.setAttribute("data-folder", folder.id);
-
-          group.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            group.classList.add("dragover");
-          });
-          group.addEventListener("dragleave", () => {
-            group.classList.remove("dragover");
-          });
-          group.addEventListener("drop", (e) => {
-            e.preventDefault();
-            group.classList.remove("dragover");
-            const tabId = e.dataTransfer.getData("text/plain");
-            const folderId = group.getAttribute("data-folder");
-
-            const targetTab = state.tabs.find((t) => t.id === tabId);
-            if (targetTab) {
-              targetTab.folderId = folderId;
-              render();
-            }
-          });
-
-          // 【功能新增】資料夾標籤：顯示名字，並綁定右鍵/長按事件
-          const fLabel = document.createElement("span");
-          fLabel.className = "folder-icon";
-          fLabel.textContent = `📁 ${folder.name}`;
-          fLabel.title = "按右鍵/長按管理資料夾";
-
-          // 綁定資料夾右鍵選單
-          fLabel.addEventListener("contextmenu", (e) => {
-            e.preventDefault();
-            showFolderCtxMenu(e, folder.id);
-          });
-
-          // 手機端長按資料夾機制
-          let fTimer;
-          fLabel.addEventListener(
-            "touchstart",
-            () => {
-              fTimer = setTimeout(
-                () => showFolderCtxMenu(null, folder.id, fLabel),
-                600,
-              );
-            },
-            { passive: true },
-          );
-          fLabel.addEventListener("touchend", () => clearTimeout(fTimer), {
-            passive: true,
-          });
-          fLabel.addEventListener("touchmove", () => clearTimeout(fTimer), {
-            passive: true,
-          });
-
-          group.appendChild(fLabel);
-
-          tabs.forEach((tab) => {
-            const el = makeTabEl(tab);
-            group.appendChild(el);
-          });
-          wrap.insertBefore(group, addBtn);
-        });
-      }
-
-      function makeTabEl(tab) {
-        const el = document.createElement("div");
-        el.className = "tab" + (state.activeTab === tab.id ? " active" : "");
-        el.setAttribute("data-tabid", tab.id);
-        el.innerHTML = `<span class="tab-color-dot" style="background:${tab.color}"></span>${tab.name}`;
-
-        el.setAttribute("draggable", "true");
-        el.addEventListener("dragstart", (e) => {
-          e.dataTransfer.setData("text/plain", tab.id);
-          el.classList.add("dragging");
-        });
-        el.addEventListener("dragend", () => {
-          el.classList.remove("dragging");
-          document
-            .querySelectorAll(".tab-group")
-            .forEach((g) => g.classList.remove("dragover"));
-        });
-
-        el.addEventListener("click", () => {
-          state.activeTab = tab.id;
-          render();
-        });
-        el.addEventListener("contextmenu", (e) => {
-          e.preventDefault();
-          showCtxMenu(e, tab.id);
-        });
-
-        let pressTimer;
-        el.addEventListener(
-          "touchstart",
-          () => {
-            pressTimer = setTimeout(() => showCtxMenu(null, tab.id, el), 600);
-          },
-          { passive: true },
-        );
-        el.addEventListener("touchend", () => clearTimeout(pressTimer), {
-          passive: true,
-        });
-        el.addEventListener("touchmove", () => clearTimeout(pressTimer), {
-          passive: true,
-        });
-
-        return el;
-      }
-
-      function renderPages() {
-        const main = document.getElementById("mainContent");
-        main.innerHTML = "";
-        state.tabs.forEach((tab) => {
-          const page = document.createElement("div");
-          page.className =
-            "page" + (state.activeTab === tab.id ? " active" : "");
-          page.setAttribute("data-page", tab.id);
-          page.innerHTML = buildPageHTML(tab);
-          main.appendChild(page);
-          attachPageEvents(page, tab);
-        });
-      }
-
-      function buildPageHTML(tab) {
-        const done = tab.items.filter((i) => i.done).length;
-        const total = tab.items.length;
-        const pct = total ? Math.round((done / total) * 100) : 0;
-        const folderName = tab.folderId
-          ? (state.folders.find((f) => f.id === tab.folderId) || {}).name
-          : null;
-
-        return `
-          <div class="list-header">
-            <div>
-              ${folderName ? `<div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:2px;">📁 ${folderName}</div>` : ""}
-              <div class="list-title">${tab.name}</div>
-              <div class="list-subtitle">${total ? `${done}/${total} 完成 · ${pct}%` : "還沒有任何項目"}</div>
+    if (tabItems.length) {
+      html += '<div class="todo-list">';
+      tabItems.forEach(item => {
+        html += `
+          <div class="todo-item ${item.done ? 'done' : ''}">
+            <div class="todo-checkbox ${item.done ? 'done' : ''}" onclick="app.toggleItem('${item.id}')">
+              ${item.done ? '✓' : ''}
             </div>
-            <button class="add-item-btn" data-additem="${tab.id}">＋ 新增</button>
-          </div>
-          ${total ? `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>` : ""}
-          <div class="add-form" id="addForm_${tab.id}">
-            <input type="text" placeholder="輸入內容…" id="addInput_${tab.id}" maxlength="60" />
-            <button class="confirm-btn" data-confirmitem="${tab.id}">加入</button>
-          </div>
-          ${total ? `<div class="swipe-hint">← 左滑項目露出垃圾桶點擊刪除</div>` : ""}
-          <div class="todo-list" id="list_${tab.id}">
-            ${tab.items.map((item) => buildItemHTML(item)).join("")}
-          </div>
-          ${total === 0 ? `<div class="empty-state"><div class="empty-icon">🌸</div><p>加入第一個計劃吧！</p></div>` : ""}
-        `;
-      }
-
-      function buildItemHTML(item) {
-        return `
-          <div class="todo-item${item.done ? " done" : ""}" data-item="${item.id}">
-            <div class="delete-bg">🗑️</div>
-            <div class="todo-inner">
-              <div class="check-btn${item.done ? " done" : ""}" data-check="${item.id}">
-                <span class="smile">😊</span>
-                <span class="checkmark">✓</span>
-                <div class="ring"></div>
-              </div>
-              <div class="todo-text">${escHtml(item.text)}</div>
-            </div>
+            <div class="todo-text">${this.escapeHtml(item.text)}</div>
+            <button class="todo-delete" onclick="app.deleteItem('${item.id}')">🗑️</button>
           </div>
         `;
-      }
-
-      function attachPageEvents(page, tab) {
-        if (page.querySelector(`[data-additem="${tab.id}"]`))
-          page
-            .querySelector(`[data-additem="${tab.id}"]`)
-            .addEventListener("click", () => toggleAddForm(tab.id));
-
-        if (page.querySelector(`[data-confirmitem="${tab.id}"]`))
-          page
-            .querySelector(`[data-confirmitem="${tab.id}"]`)
-            .addEventListener("click", () => addItem(tab.id));
-
-        const input = page.querySelector(`#addInput_${tab.id}`);
-        if (input)
-          input.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") addItem(tab.id);
-          });
-
-        attachItemEvents(page, tab);
-      }
-
-      function attachItemEvents(page, tab) {
-        page.querySelectorAll(".check-btn").forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            toggleItem(btn.getAttribute("data-check"), tab.id, btn);
-          });
-        });
-
-        page.querySelectorAll(".delete-bg").forEach((btn) => {
-          btn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            const itemId = btn.closest(".todo-item").getAttribute("data-item");
-            deleteItem(itemId, tab.id);
-          });
-        });
-
-        page.querySelectorAll(".todo-item").forEach((el) => {
-          attachSwipe(el, tab.id);
-        });
-      }
-
-      // ===================== SWIPE TO DELETE =====================
-      function attachSwipe(el, tabId) {
-        const inner = el.querySelector(".todo-inner");
-        let startX = 0,
-          curX = 0,
-          dragging = false,
-          revealed = false;
-
-        function onStart(x) {
-          startX = x;
-          curX = x;
-          dragging = true;
-        }
-        function onMove(x) {
-          if (!dragging) return;
-          curX = x;
-          let dx = curX - startX;
-          if (revealed) dx -= 80;
-
-          const finalX = Math.max(-100, Math.min(0, dx));
-          inner.style.transition = "none";
-          inner.style.transform = `translateX(${finalX}px)`;
-        }
-        function onEnd() {
-          if (!dragging) return;
-          dragging = false;
-          inner.style.transition =
-            "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-
-          const dx = curX - startX;
-          if (dx < -40) {
-            inner.style.transform = "translateX(-80px)";
-            revealed = true;
-          } else {
-            inner.style.transform = "translateX(0)";
-            revealed = false;
-          }
-        }
-
-        el.addEventListener(
-          "touchstart",
-          (e) => onStart(e.touches[0].clientX),
-          { passive: true },
-        );
-        el.addEventListener(
-          "touchmove",
-          (e) => {
-            if (dragging) onMove(e.touches[0].clientX);
-          },
-          { passive: true },
-        );
-        el.addEventListener("touchend", () => onEnd());
-
-        inner.addEventListener("mousedown", (e) => {
-          if (e.button === 0) onStart(e.clientX);
-        });
-        window.addEventListener("mousemove", (e) => {
-          if (dragging) onMove(e.clientX);
-        });
-        window.addEventListener("mouseup", () => onEnd());
-
-        inner.addEventListener(
-          "click",
-          (e) => {
-            if (revealed) {
-              e.preventDefault();
-              e.stopPropagation();
-              inner.style.transform = "translateX(0)";
-              revealed = false;
-            }
-          },
-          { capture: true },
-        );
-      }
-
-      // ===================== ACTIONS =====================
-      function toggleAddForm(tabId) {
-        const form = document.getElementById(`addForm_${tabId}`);
-        if (!form) return;
-        const visible = form.classList.toggle("visible");
-        if (visible) {
-          const input = document.getElementById(`addInput_${tabId}`);
-          if (input) setTimeout(() => input.focus(), 50);
-        }
-      }
-
-      function addItem(tabId) {
-        const input = document.getElementById(`addInput_${tabId}`);
-        if (!input || !input.value.trim()) return;
-        const text = input.value.trim();
-        const tab = state.tabs.find((t) => t.id === tabId);
-        if (!tab) return;
-        tab.items.push({ id: "i" + ++state.nextId, text, done: false });
-        input.value = "";
-        render();
-      }
-
-      function toggleItem(itemId, tabId, btnEl) {
-        const tab = state.tabs.find((t) => t.id === tabId);
-        if (!tab) return;
-        const item = tab.items.find((i) => i.id === itemId);
-        if (!item) return;
-
-        if (!item.done) {
-          btnEl.classList.add("smiling");
-          btnEl.querySelector(".smile").style.display = "block";
-          setTimeout(() => {
-            btnEl.classList.remove("smiling");
-            btnEl.querySelector(".smile").style.display = "none";
-            item.done = true;
-            btnEl.classList.add("done");
-            btnEl.querySelector(".checkmark").style.display = "block";
-            btnEl.querySelector(".ring").style.animation =
-              "ringPop 0.5s ease-out forwards";
-
-            const itemEl = btnEl.closest(".todo-item");
-            if (itemEl) itemEl.classList.add("done");
-            spawnConfetti(btnEl.getBoundingClientRect());
-            updateProgress(tabId);
-            saveState();
-          }, 600);
-        } else {
-          item.done = false;
-          btnEl.classList.remove("done");
-          btnEl.querySelector(".checkmark").style.display = "none";
-          btnEl.querySelector(".ring").style.animation = "none";
-          const itemEl = btnEl.closest(".todo-item");
-          if (itemEl) itemEl.classList.remove("done");
-          updateProgress(tabId);
-          saveState();
-        }
-      }
-
-      function updateProgress(tabId) {
-        const tab = state.tabs.find((t) => t.id === tabId);
-        if (!tab) return;
-        const done = tab.items.filter((i) => i.done).length;
-        const total = tab.items.length;
-        const pct = total ? Math.round((done / total) * 100) : 0;
-        const fill = document.querySelector(
-          `[data-page="${tabId}"] .progress-fill`,
-        );
-        if (fill) fill.style.width = pct + "%";
-        const subtitle = document.querySelector(
-          `[data-page="${tabId}"] .list-subtitle`,
-        );
-        if (subtitle) subtitle.textContent = `${done}/${total} 完成 · ${pct}%`;
-      }
-
-      function deleteItem(itemId, tabId) {
-        const tab = state.tabs.find((t) => t.id === tabId);
-        if (!tab) return;
-        tab.items = tab.items.filter((i) => i.id !== itemId);
-        render();
-      }
-
-      function spawnConfetti(rect) {
-        const colors = ["#F2A7B8", "#7BC8A4", "#F7D98C", "#A7C4E8", "#C4A8E8"];
-        for (let i = 0; i < 10; i++) {
-          const el = document.createElement("div");
-          el.className = "confetti-piece";
-          el.style.cssText = `
-            left: ${rect.left + rect.width / 2 + (Math.random() - 0.5) * 60}px;
-            top: ${rect.top}px;
-            background: ${colors[Math.floor(Math.random() * colors.length)]};
-            border-radius: ${Math.random() > 0.5 ? "50%" : "2px"};
-            width: ${6 + Math.random() * 6}px;
-            height: ${6 + Math.random() * 6}px;
-            animation-delay: ${Math.random() * 0.3}s;
-            animation-duration: ${0.8 + Math.random() * 0.6}s;
-          `;
-          document.body.appendChild(el);
-          setTimeout(() => el.remove(), 1500);
-        }
-      }
-
-      // ===================== CONTEXT MENU (選單) =====================
-      let ctxTabId = null;
-      let ctxFolderId = null; // 【新增】追蹤目前正在點擊哪一個資料夾的 ID
-
-      function showCtxMenu(e, tabId, fromEl) {
-        ctxTabId = tabId;
-        const menu = document.getElementById("ctxMenu");
-        menu.classList.add("visible");
-        if (e) {
-          let x = e.clientX,
-            y = e.clientY;
-          if (x + 160 > window.innerWidth) x = window.innerWidth - 165;
-          if (y + 140 > window.innerHeight) y = window.innerHeight - 145;
-          menu.style.left = x + "px";
-          menu.style.top = y + "px";
-        } else if (fromEl) {
-          const r = fromEl.getBoundingClientRect();
-          menu.style.left = r.left + "px";
-          menu.style.top = r.bottom + 4 + "px";
-        }
-      }
-
-      // 【功能新增】顯示資料夾專屬右鍵選單的函式
-      function showFolderCtxMenu(e, folderId, fromEl) {
-        ctxFolderId = folderId;
-        const menu = document.getElementById("folderCtxMenu");
-        menu.classList.add("visible");
-        if (e) {
-          let x = e.clientX,
-            y = e.clientY;
-          if (x + 160 > window.innerWidth) x = window.innerWidth - 165;
-          if (y + 140 > window.innerHeight) y = window.innerHeight - 145;
-          menu.style.left = x + "px";
-          menu.style.top = y + "px";
-        } else if (fromEl) {
-          const r = fromEl.getBoundingClientRect();
-          menu.style.left = r.left + "px";
-          menu.style.top = r.bottom + 4 + "px";
-        }
-      }
-
-      function hideCtxMenu() {
-        document.getElementById("ctxMenu").classList.remove("visible");
-        document.getElementById("folderCtxMenu").classList.remove("visible"); // 同步收回資料夾選單
-      }
-
-      document.getElementById("ctxDelete").addEventListener("click", () => {
-        if (!ctxTabId) return;
-        state.tabs = state.tabs.filter((t) => t.id !== ctxTabId);
-        if (state.activeTab === ctxTabId)
-          state.activeTab = state.tabs[0]?.id || null;
-        hideCtxMenu();
-        render();
       });
+      html += '</div>';
+    } else {
+      html += '<div class="empty-state"><div class="empty-icon">✨</div><p>加入第一個項目吧！</p></div>';
+    }
 
-      document.getElementById("ctxRename").addEventListener("click", () => {
-        if (!ctxTabId) return;
-        const tab = state.tabs.find((t) => t.id === ctxTabId);
-        if (!tab) return;
-        hideCtxMenu();
-        openTabModal(tab);
+    /* 新增表單 */
+    html += `
+      <div class="add-form" style="margin-top: 16px;">
+        <input type="text" id="newItemInput" placeholder="新增待辦項目..." />
+        <button class="add-btn" onclick="app.addItem('${activeTab.id}')">加入</button>
+      </div>
+    `;
+
+    tabContent.innerHTML = html;
+
+    /* 新增項目 Enter 鍵快速確認 */
+    const input = document.getElementById('newItemInput');
+    if (input) {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') app.addItem(activeTab.id);
       });
+    }
+  },
 
-      document.getElementById("ctxMove").addEventListener("click", () => {
-        if (!ctxTabId) return;
-        hideCtxMenu();
-        openMoveModal(ctxTabId);
-      });
+  /* ────────────────────────────────────────
+     UI 顯示/隱藏
+  ────────────────────────────────────────── */
+  showApp() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    document.getElementById('appTitle').textContent = `${this.state.nickname} 的計劃本`;
+    this.render();
+  },
 
-      // --- 【功能新增】資料夾右鍵選單點擊事件處理 ---
+  showRoomCode() {
+    const section = document.getElementById('roomCodeSection');
+    document.getElementById('displayRoomCode').textContent = this.state.roomId;
+    section.style.display = 'block';
+  },
 
-      // 1. 資料夾重新命名
-      document
-        .getElementById("ctxFolderRename")
-        .addEventListener("click", () => {
-          if (!ctxFolderId) return;
-          const folder = state.folders.find((f) => f.id === ctxFolderId);
-          if (!folder) return;
-          hideCtxMenu();
+  showRoomInfo() {
+    document.getElementById('modalRoomCode').textContent = this.state.roomId;
+    document.getElementById('modalUserCount').textContent = `${this.state.usersCount} 人在線`;
+    document.getElementById('roomInfoModal').classList.add('visible');
+  },
 
-          // 進入編輯模式：設定暫存變數，並複用原有的 folderModal
-          editingFolderId = folder.id;
-          document.getElementById("folderModalTitle").textContent =
-            "編輯資料夾";
-          document.getElementById("folderNameInput").value = folder.name;
-          document.getElementById("folderModal").classList.add("visible");
-          setTimeout(
-            () => document.getElementById("folderNameInput").focus(),
-            100,
-          );
-        });
+  copyRoomCode() {
+    navigator.clipboard.writeText(this.state.roomId).then(() => {
+      alert('已複製房間代碼：' + this.state.roomId);
+    });
+  },
 
-      // 2. 刪除資料夾
-      document
-        .getElementById("ctxFolderDelete")
-        .addEventListener("click", () => {
-          if (!ctxFolderId) return;
-          const folder = state.folders.find((f) => f.id === ctxFolderId);
-          if (!folder) return;
-          hideCtxMenu();
+  leaveRoom() {
+    if (confirm('確定要離開房間？')) {
+      this.state.roomId = null;
+      localStorage.removeItem('plannerUser');
+      location.reload();
+    }
+  },
 
-          if (
-            confirm(
-              `確定要刪除「${folder.name}」資料夾嗎？\n（資料夾內的分頁將自動移至外層，計畫內容不會遺失喔！）`,
-            )
-          ) {
-            // A. 從資料夾陣列中移除
-            state.folders = state.folders.filter((f) => f.id !== ctxFolderId);
-            // B. 安全解耦：把原本屬於該資料夾的分頁 folderId 清空
-            state.tabs.forEach((tab) => {
-              if (tab.folderId === ctxFolderId) tab.folderId = null;
-            });
-            render();
-          }
-        });
+  /* ────────────────────────────────────────
+     狀態更新
+  ────────────────────────────────────────── */
+  updateOnlineStatus() {
+    const indicator = document.getElementById('onlineIndicator');
+    const badge = document.getElementById('statusBadge');
+    if (this.state.isOnline) {
+      indicator.classList.remove('offline');
+      badge.classList.remove('status-offline');
+      badge.classList.add('status-online');
+      badge.textContent = '🟢 在線';
+    } else {
+      indicator.classList.add('offline');
+      badge.classList.remove('status-online');
+      badge.classList.add('status-offline');
+      badge.textContent = '🔴 離線';
+    }
+  },
 
-      document.addEventListener("click", (e) => {
-        if (!e.target.closest(".ctx-menu")) hideCtxMenu();
-      });
+  updateUserCount() {
+    document.getElementById('userCount').textContent = `${this.state.usersCount} 人在線`;
+  },
 
-      // ===================== MODAL WINDOWS =====================
-      let editingTabId = null;
-      let editingFolderId = null; // 【新增】用來儲存當前正在編輯的資料夾 ID
-      let selectedColor = TAB_COLORS[0];
+  showSyncStatus(status) {
+    const syncDot = document.getElementById('syncDot');
+    const syncText = document.getElementById('syncText');
+    if (status === 'pending') {
+      syncDot.classList.add('pending');
+      syncText.textContent = '同步中...';
+    } else {
+      syncDot.classList.remove('pending');
+      syncText.textContent = '已同步';
+    }
+  },
 
-      function openTabModal(existingTab) {
-        editingTabId = existingTab ? existingTab.id : null;
-        selectedColor = existingTab ? existingTab.color : TAB_COLORS[0];
+  /* ────────────────────────────────────────
+     工具函式
+  ────────────────────────────────────────── */
+  generateId() {
+    return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  },
 
-        document.getElementById("modalTitle").textContent = existingTab
-          ? "編輯分頁"
-          : "新增分頁";
-        document.getElementById("tabNameInput").value = existingTab
-          ? existingTab.name
-          : "";
+  generateUserId() {
+    let userId = localStorage.getItem('userId');
+    if (!userId) {
+      userId = 'user_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('userId', userId);
+    }
+    return userId;
+  },
 
-        const cp = document.getElementById("colorPicker");
-        cp.innerHTML = "";
-        TAB_COLORS.forEach((c) => {
-          const sw = document.createElement("div");
-          sw.className =
-            "color-swatch" + (c === selectedColor ? " selected" : "");
-          sw.style.background = c;
-          sw.addEventListener("click", () => {
-            selectedColor = c;
-            cp.querySelectorAll(".color-swatch").forEach((s) =>
-              s.classList.remove("selected"),
-            );
-            sw.classList.add("selected");
-          });
-          cp.appendChild(sw);
-        });
+  saveUserInfo() {
+    localStorage.setItem('plannerUser', JSON.stringify({
+      userId: this.state.userId,
+      nickname: this.state.nickname,
+      lastRoomId: this.state.roomId
+    }));
+  },
 
-        const fs = document.getElementById("folderSelect");
-        fs.innerHTML = '<option value="">不加入資料夾</option>';
-        state.folders.forEach((f) => {
-          const opt = document.createElement("option");
-          opt.value = f.id;
-          opt.textContent = f.name;
-          if (existingTab && existingTab.folderId === f.id) opt.selected = true;
-          fs.appendChild(opt);
-        });
+  escapeHtml(text) {
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+  }
+};
 
-        const newOpt = document.createElement("option");
-        newOpt.value = "__new__";
-        newOpt.textContent = "＋ 新增資料夾…";
-        fs.appendChild(newOpt);
-
-        fs.addEventListener("change", function handler() {
-          if (fs.value === "__new__") {
-            fs.removeEventListener("change", handler);
-            hideTabModal();
-            openFolderModal(() => {
-              openTabModal(existingTab);
-            });
-          }
-        });
-
-        document.getElementById("tabModal").classList.add("visible");
-        setTimeout(() => document.getElementById("tabNameInput").focus(), 100);
-      }
-
-      function hideTabModal() {
-        document.getElementById("tabModal").classList.remove("visible");
-      }
-
-      document
-        .getElementById("addTabBtn")
-        .addEventListener("click", () => openTabModal(null));
-      document
-        .getElementById("modalCancel")
-        .addEventListener("click", hideTabModal);
-
-      document.getElementById("modalConfirm").addEventListener("click", () => {
-        const name = document.getElementById("tabNameInput").value.trim();
-        if (!name) {
-          document.getElementById("tabNameInput").focus();
-          return;
-        }
-        const folderId = document.getElementById("folderSelect").value || null;
-
-        if (editingTabId) {
-          const tab = state.tabs.find((t) => t.id === editingTabId);
-          if (tab) {
-            tab.name = name;
-            tab.color = selectedColor;
-            tab.folderId = folderId === "__new__" ? null : folderId;
-          }
-        } else {
-          state.tabs.push({
-            id: "t" + ++state.nextId,
-            name,
-            color: selectedColor,
-            folderId: folderId === "__new__" ? null : folderId,
-            items: [],
-          });
-          state.activeTab = state.tabs[state.tabs.length - 1].id;
-        }
-        hideTabModal();
-        render();
-      });
-
-      document
-        .getElementById("tabNameInput")
-        .addEventListener("keydown", (e) => {
-          if (e.key === "Enter")
-            document.getElementById("modalConfirm").click();
-        });
-
-      let folderCallback = null;
-      function openFolderModal(cb) {
-        folderCallback = cb;
-        editingFolderId = null; // 確保是新增模式
-        document.getElementById("folderModalTitle").textContent = "新增資料夾";
-        document.getElementById("folderNameInput").value = "";
-        document.getElementById("folderModal").classList.add("visible");
-        setTimeout(
-          () => document.getElementById("folderNameInput").focus(),
-          100,
-        );
-      }
-
-      document.getElementById("folderCancel").addEventListener("click", () => {
-        document.getElementById("folderModal").classList.remove("visible");
-        editingFolderId = null;
-        if (folderCallback) {
-          folderCallback();
-          folderCallback = null;
-        }
-      });
-
-      // 【修改點】讓確認鍵同時支援「新增模式」與「編輯模式」的判斷
-      document.getElementById("folderConfirm").addEventListener("click", () => {
-        const name = document.getElementById("folderNameInput").value.trim();
-        if (!name) {
-          document.getElementById("folderNameInput").focus();
-          return;
-        }
-
-        if (editingFolderId) {
-          // 💡 編輯模式：更新現有資料夾名稱
-          const folder = state.folders.find((f) => f.id === editingFolderId);
-          if (folder) folder.name = name;
-          editingFolderId = null; // 清空狀態
-        } else {
-          // 💡 新增模式：推入新資料
-          const id = "f" + ++state.nextId;
-          state.folders.push({ id, name });
-
-          if (folderCallback) {
-            document.getElementById("folderModal").classList.remove("visible");
-            folderCallback();
-            setTimeout(() => {
-              const fs = document.getElementById("folderSelect");
-              if (fs) {
-                const opt = document.createElement("option");
-                opt.value = id;
-                opt.textContent = name;
-                opt.selected = true;
-                const newOpt = Array.from(fs.options).find(
-                  (o) => o.value === "__new__",
-                );
-                fs.insertBefore(opt, newOpt);
-                fs.value = id;
-              }
-            }, 50);
-            folderCallback = null;
-            return;
-          }
-        }
-
-        document.getElementById("folderModal").classList.remove("visible");
-        render();
-      });
-
-      document
-        .getElementById("folderNameInput")
-        .addEventListener("keydown", (e) => {
-          if (e.key === "Enter")
-            document.getElementById("folderConfirm").click();
-        });
-
-      let moveTabId = null;
-      function openMoveModal(tabId) {
-        moveTabId = tabId;
-        const tab = state.tabs.find((t) => t.id === tabId);
-        const sel = document.getElementById("moveFolderSelect");
-        sel.innerHTML = '<option value="">不加入資料夾</option>';
-        state.folders.forEach((f) => {
-          const opt = document.createElement("option");
-          opt.value = f.id;
-          opt.textContent = f.name;
-          if (tab && tab.folderId === f.id) opt.selected = true;
-          sel.appendChild(opt);
-        });
-        document.getElementById("moveModal").classList.add("visible");
-      }
-
-      document.getElementById("moveCancelBtn").addEventListener("click", () => {
-        document.getElementById("moveModal").classList.remove("visible");
-      });
-
-      document
-        .getElementById("moveConfirmBtn")
-        .addEventListener("click", () => {
-          const folderId =
-            document.getElementById("moveFolderSelect").value || null;
-          const tab = state.tabs.find((t) => t.id === moveTabId);
-          if (tab) tab.folderId = folderId;
-          document.getElementById("moveModal").classList.remove("visible");
-          render();
-        });
-
-      document.querySelectorAll(".modal-bg").forEach((bg) => {
-        bg.addEventListener("click", (e) => {
-          if (e.target === bg) {
-            bg.classList.remove("visible");
-            editingFolderId = null;
-          }
-        });
-      });
-
-      // ===================== HELPERS =====================
-      function escHtml(str) {
-        return str
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
-      }
-
-      // ===================== INITIALIZATION =====================
-      loadState();
-      if (!state.activeTab && state.tabs.length)
-        state.activeTab = state.tabs[0].id;
-
-      const titleTextEl = document.getElementById("topbarTitleText");
-      titleTextEl.addEventListener("blur", () => {
-        const newTitle = titleTextEl.textContent.trim();
-        state.title = newTitle || "我的計劃本";
-        saveState();
-      });
-
-      titleTextEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          titleTextEl.blur();
-        }
-      });
-
-      const tabsWrapEl = document.getElementById("tabsWrap");
-      tabsWrapEl.addEventListener("dragover", (e) => {
-        e.preventDefault();
-      });
-      tabsWrapEl.addEventListener("drop", (e) => {
-        if (!e.target.closest(".tab-group")) {
-          e.preventDefault();
-          const tabId = e.dataTransfer.getData("text/plain");
-          const targetTab = state.tabs.find((t) => t.id === tabId);
-          if (targetTab) {
-            targetTab.folderId = null;
-            render();
-          }
-        }
-      });
-
-      render();
-    </script>
-  </body>
+/* 初始化應用 */
+document.addEventListener('DOMContentLoaded', () => {
+  app.init();
+});
+</script>
+</body>
 </html>
