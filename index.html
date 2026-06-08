@@ -26,12 +26,17 @@
       appId:             "YOUR_APP_ID"
     };
 
-    // 初始化 Firebase
-    const fApp = initializeApp(firebaseConfig);
-    const db = getDatabase(fApp);
+    try {
+      // 初始化 Firebase
+      const fApp = initializeApp(firebaseConfig);
+      const db = getDatabase(fApp);
 
-    // 掛載至全域
-    window.FDB = { db, ref, set, get, update, remove, onValue, push, onDisconnect };
+      // 掛載至全域
+      window.FDB = { db, ref, set, get, update, remove, onValue, push, onDisconnect };
+      console.log("Firebase 模組載入成功！");
+    } catch (error) {
+      console.error("Firebase 初始化失敗，請檢查設定金鑰:", error);
+    }
   </script>
 
   <style>
@@ -335,7 +340,8 @@
     const saved = localStorage.getItem('planner_user_session');
     if (saved) {
       currentUser = JSON.parse(saved);
-      showLobbyUI();
+      // 延遲一點點確保 Firebase 物件掛載完成
+      setTimeout(() => { showLobbyUI(); }, 300);
     }
     
     // 全域點擊關閉快顯選單
@@ -359,6 +365,12 @@
   }
 
   async function handleAuthSubmit() {
+    // 防呆：如果 Firebase 還沒載入成功
+    if (!window.FDB || !window.FDB.db) {
+      alert("⚠️ 連線模組初始化中或設定有誤！\n請確認程式碼最上方的 Firebase Config 金鑰是否已正確填入！");
+      return;
+    }
+
     const user = document.getElementById('authUsername').value.trim().toLowerCase();
     const pass = document.getElementById('authPassword').value.trim();
     const nick = document.getElementById('authNickname').value.trim();
@@ -367,27 +379,44 @@
     if(isRegisterMode && !nick) return alert('請填寫你的顯示暱稱！');
 
     const { db, ref, get, set } = window.FDB;
+    const submitBtn = document.getElementById('btnAuthSubmit');
+    
+    try {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "處理中...";
 
-    if(isRegisterMode) {
-      // 註冊邏輯
-      const snap = await get(ref(db, `users/${user}`));
-      if(snap.exists()) return alert('此帳號已存在，請更換其他帳號名稱！');
-      
-      const userData = { username: user, password: pass, nickname: nick, rooms: {} };
-      await set(ref(db, `users/${user}`), userData);
-      currentUser = { username: user, nickname: nick };
-      alert('🎉 註冊成功，已為您自動登入！');
-    } else {
-      // 登入邏輯
-      const snap = await get(ref(db, `users/${user}`));
-      if(!snap.exists() || snap.val().password !== pass) {
-        return alert('帳號或密碼輸入錯誤，請再試一次！');
+      if(isRegisterMode) {
+        // 註冊邏輯
+        const snap = await get(ref(db, `users/${user}`));
+        if(snap.exists()) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "註冊並登入";
+          return alert('此帳號已存在，請更換其他帳號名稱！');
+        }
+        
+        const userData = { username: user, password: pass, nickname: nick, rooms: {} };
+        await set(ref(db, `users/${user}`), userData);
+        currentUser = { username: user, nickname: nick };
+        alert('🎉 註冊成功，已為您自動登入！');
+      } else {
+        // 登入邏輯
+        const snap = await get(ref(db, `users/${user}`));
+        if(!snap.exists() || snap.val().password !== pass) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "登入系統";
+          return alert('帳號或密碼輸入錯誤，請再試一次！');
+        }
+        currentUser = { username: user, nickname: snap.val().nickname };
       }
-      currentUser = { username: user, nickname: snap.val().nickname };
-    }
 
-    localStorage.setItem('planner_user_session', JSON.stringify(currentUser));
-    showLobbyUI();
+      localStorage.setItem('planner_user_session', JSON.stringify(currentUser));
+      showLobbyUI();
+    } catch (err) {
+      alert("❌ 資料庫連線發生錯誤，請確認 Firebase 資料庫規則（Rules）是否已開啟讀寫權限！");
+      console.error(err);
+      submitBtn.disabled = false;
+      submitBtn.textContent = isRegisterMode ? "註冊並登入" : "登入系統";
+    }
   }
 
   /* ────────────────────────────────────────
@@ -408,6 +437,7 @@
   }
 
   function fetchUserRoomsList() {
+    if (!window.FDB) return;
     const { db, ref, onValue } = window.FDB;
     onValue(ref(db, `users/${currentUser.username}/rooms`), (snapshot) => {
       const listEl = document.getElementById('myRoomsList');
@@ -444,19 +474,23 @@
 
     const { db, ref, get, set } = window.FDB;
     
-    if(isCreateNew) {
-      const roomSnap = await get(ref(db, `rooms/${rId}`));
-      if(roomSnap.exists()) return alert('此代碼房間已被建立，請換個代碼或直接加入！');
-      // 初始化房間結構，防止卡住
-      await set(ref(db, `rooms/${rId}/info`), { createdBy: currentUser.username, code: rId });
-    } else {
-      const roomSnap = await get(ref(db, `rooms/${rId}`));
-      if(!roomSnap.exists()) return alert('找不到此房間，請確認代碼是否正確！');
-    }
+    try {
+      if(isCreateNew) {
+        const roomSnap = await get(ref(db, `rooms/${rId}`));
+        if(roomSnap.exists()) return alert('此代碼房間已被建立，請換個代碼或直接加入！');
+        // 初始化房間結構，防止卡住
+        await set(ref(db, `rooms/${rId}/info`), { createdBy: currentUser.username, code: rId });
+      } else {
+        const roomSnap = await get(ref(db, `rooms/${rId}`));
+        if(!roomSnap.exists()) return alert('找不到此房間，請確認代碼是否正確！');
+      }
 
-    // 將房間塞入個人的清單中（實現不重複輸入代碼）
-    await set(ref(db, `users/${currentUser.username}/rooms/${rId}`), true);
-    selectAndEnterRoom(rId);
+      // 將房間塞入個人的清單中（實現不重複輸入代碼）
+      await set(ref(db, `users/${currentUser.username}/rooms/${rId}`), true);
+      selectAndEnterRoom(rId);
+    } catch (e) {
+      alert("無法建立或進入房間，請檢查網路，或確認 Firebase Realtime Database 規則是否允許讀寫！");
+    }
   }
 
   function selectAndEnterRoom(roomId) {
@@ -676,7 +710,7 @@
       html += `<div class="empty-state"><div class="empty-icon">✨</div><p>目前沒有任何待辦事項</p></div>`;
     }
 
-    // 新增輸入表單（如果不是擁有者，直接將輸入與按鈕禁用隱藏）
+    // 新增輸入表單
     if (isOwner) {
       html += `
         <div class="add-form">
@@ -728,7 +762,6 @@
     const { db, ref, update } = window.FDB;
 
     if (!targetItem.done) {
-      // 觸發可愛的笑臉動畫
       element.classList.add('smiling');
       element.querySelector('.smile').style.display = 'block';
       setTimeout(async () => {
@@ -749,18 +782,16 @@
      分頁與資料夾編輯/建立彈出層邏輯
   ────────────────────────────────────────── */
   function openTabModal(existingTabObj) {
-    // 權限攔截：如果是欲修改，且不是該分頁擁有者
     if (existingTabObj && existingTabObj.owner !== currentUser.username) {
       alert('🚫 你不具備變更此分頁的擁有者權限！');
       return;
     }
 
     editingTabId = existingTabObj ? existingTabObj.id : null;
-    document.getElementById('tabModalTitle').textContent = editingTabObj ? '✏️ 編輯分頁屬性' : '✨ 建立新分頁';
+    document.getElementById('tabModalTitle').textContent = existingTabObj ? '✏️ 編輯分頁屬性' : '✨ 建立新分頁';
     document.getElementById('tabNameInput').value = existingTabObj ? existingTabObj.name : '';
     chosenColor = existingTabObj ? existingTabObj.color : TAB_COLORS[0];
 
-    // 色票渲染
     const cp = document.getElementById('colorPicker');
     cp.innerHTML = '';
     TAB_COLORS.forEach(c => {
@@ -775,7 +806,6 @@
       cp.appendChild(swatch);
     });
 
-    // 資料夾下拉收納器渲染
     const sel = document.getElementById('folderSelect');
     sel.innerHTML = '<option value="">根目錄 (不收入資料夾)</option>';
     Object.keys(roomData.folders).forEach(fId => {
@@ -794,14 +824,12 @@
     const { db, ref, push, update } = window.FDB;
 
     if (editingTabId) {
-      // 更新現有分頁
       await update(ref(db, `rooms/${currentRoomId}/tabs/${editingTabId}`), {
         name: name,
         color: chosenColor,
         folderId: folderId
       });
     } else {
-      // 建立全新分頁，並打上專屬擁有者烙印 (權限大腦)
       const newRef = await push(ref(db, `rooms/${currentRoomId}/tabs`), {
         name: name,
         color: chosenColor,
@@ -844,10 +872,7 @@
     const targetTab = roomData.tabs[tabId];
     if(!targetTab) return;
 
-    // 權限卡關：非自己的分頁，點擊不跳選單（因為其他人只能看！）
-    if(targetTab.owner !== currentUser.username) {
-      return; 
-    }
+    if(targetTab.owner !== currentUser.username) return; 
 
     const menu = document.getElementById('tabCtxMenu');
     menu.style.display = 'block';
@@ -870,9 +895,7 @@
     if(!selectedCtxTabId || !confirm("確定要整份刪除此分頁及裡面的所有計劃事項嗎？")) return;
     const { db, ref, remove } = window.FDB;
     
-    // 1. 移出分頁
     await remove(ref(db, `rooms/${currentRoomId}/tabs/${selectedCtxTabId}`));
-    // 2. 清掃屬於此分頁的所有內嵌 items
     Object.keys(roomData.items).forEach(async iId => {
       if(roomData.items[iId].tabId === selectedCtxTabId) {
         await remove(ref(db, `rooms/${currentRoomId}/items/${iId}`));
@@ -889,9 +912,7 @@
     if(!selectedCtxFolderId || !confirm("確定要移除這個資料夾嗎？（其內部分頁會被自動退回外層，不會丟失）")) return;
     const { db, ref, remove, update } = window.FDB;
 
-    // 1. 刪除資料夾標的
     await remove(ref(db, `rooms/${currentRoomId}/folders/${selectedCtxFolderId}`));
-    // 2. 將內部分頁釋放，重設 folderId 為 null
     Object.keys(roomData.tabs).forEach(async tId => {
       if(roomData.tabs[tId].folderId === selectedCtxFolderId) {
         await update(ref(db, `rooms/${currentRoomId}/tabs/${tId}`), { folderId: null });
