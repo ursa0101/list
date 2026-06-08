@@ -72,7 +72,6 @@
         gap: 8px;
       }
 
-      /* 【技術點】可編輯標題的 focus 視覺樣式 */
       #topbarTitleText {
         outline: none;
         transition: background 0.2s;
@@ -95,15 +94,8 @@
       }
 
       @keyframes pulse {
-        0%,
-        100% {
-          transform: scale(1);
-          opacity: 1;
-        }
-        50% {
-          transform: scale(1.3);
-          opacity: 0.7;
-        }
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.3); opacity: 0.7; }
       }
 
       /* === TABS STRIP === */
@@ -132,7 +124,6 @@
         transition: all 0.2s;
       }
 
-      /* 【技術點】當拖拽對象在資料夾上方時的視覺回饋 */
       .tab-group.dragover {
         background: var(--cream3);
         border-color: var(--brown);
@@ -140,13 +131,15 @@
       }
 
       .folder-icon {
-        font-size: 14px;
-        padding: 4px 8px;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 5px 10px;
         border-radius: 8px;
         cursor: pointer;
         user-select: none;
         transition: background 0.2s;
-        color: var(--text-muted);
+        color: var(--brown);
+        white-space: nowrap;
       }
       .folder-icon:hover {
         background: var(--cream3);
@@ -156,7 +149,7 @@
         position: relative;
         padding: 7px 14px;
         border-radius: 10px 10px 0 0;
-        cursor: grab; /* 提示使用者這是一個可以拖拽的元件 */
+        cursor: grab;
         font-size: 13px;
         font-weight: 600;
         color: var(--text-muted);
@@ -173,7 +166,6 @@
       .tab:active {
         cursor: grabbing;
       }
-      /* 拖拽進行中的樣式 */
       .tab.dragging {
         opacity: 0.4;
         border: 1.5px dashed var(--brown-light);
@@ -327,16 +319,6 @@
         background: #e8919e;
       }
 
-      /* === SECTION LABEL === */
-      .section-label {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--text-muted);
-        margin: 18px 0 8px 2px;
-      }
-
       /* === TODO ITEMS === */
       .todo-list {
         display: flex;
@@ -359,9 +341,7 @@
         border: 1.5px solid var(--border);
         border-radius: var(--radius);
         padding: 12px 14px;
-        transition:
-          transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-          box-shadow 0.2s;
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.2s;
         position: relative;
         z-index: 1;
         will-change: transform;
@@ -371,7 +351,6 @@
         box-shadow: 0 3px 14px var(--shadow);
       }
 
-      /* Swipe delete background */
       .delete-bg {
         position: absolute;
         right: 0;
@@ -415,20 +394,10 @@
         background: var(--cream);
       }
 
-      /* Smile animation */
       @keyframes smileIn {
-        0% {
-          transform: scale(0) rotate(-20deg);
-          opacity: 0;
-        }
-        60% {
-          transform: scale(1.3) rotate(5deg);
-          opacity: 1;
-        }
-        100% {
-          transform: scale(1) rotate(0deg);
-          opacity: 1;
-        }
+        0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+        60% { transform: scale(1.3) rotate(5deg); opacity: 1; }
+        100% { transform: scale(1) rotate(0deg); opacity: 1; }
       }
 
       .check-btn .smile {
@@ -453,33 +422,15 @@
       }
 
       @keyframes ringPop {
-        0% {
-          transform: scale(1);
-          opacity: 0.7;
-        }
-        100% {
-          transform: scale(1.8);
-          opacity: 0;
-        }
+        0% { transform: scale(1); opacity: 0.7; }
+        100% { transform: scale(1.8); opacity: 0; }
       }
 
-      .check-btn.smiling .smile {
-        display: block;
-      }
-      .check-btn.smiling {
-        border-color: var(--yellow);
-        background: var(--yellow-light);
-      }
-      .check-btn.done {
-        border-color: var(--green);
-        background: var(--green-light);
-      }
-      .check-btn.done .checkmark {
-        display: block;
-      }
-      .check-btn.done .ring {
-        animation: ringPop 0.5s ease-out forwards;
-      }
+      .check-btn.smiling .smile { display: block; }
+      .check-btn.smiling { border-color: var(--yellow); background: var(--yellow-light); }
+      .check-btn.done { border-color: var(--green); background: var(--green-light); }
+      .check-btn.done .checkmark { display: block; }
+      .check-btn.done .ring { animation: ringPop 0.5s ease-out forwards; }
 
       .todo-text {
         flex: 1;
@@ -496,7 +447,6 @@
         opacity: 0.7;
       }
 
-      /* Empty state */
       .empty-state {
         text-align: center;
         padding: 48px 20px;
@@ -521,19 +471,13 @@
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         z-index: 999;
         overflow: hidden;
-        min-width: 140px;
+        min-width: 150px;
         display: none;
         animation: menuIn 0.15s ease-out;
       }
       @keyframes menuIn {
-        from {
-          opacity: 0;
-          transform: scale(0.92);
-        }
-        to {
-          opacity: 1;
-          transform: scale(1);
-        }
+        from { opacity: 0; transform: scale(0.92); }
+        to { opacity: 1; transform: scale(1); }
       }
       .ctx-menu.visible {
         display: block;
@@ -585,14 +529,8 @@
         animation: modalIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
       @keyframes modalIn {
-        from {
-          transform: scale(0.85);
-          opacity: 0;
-        }
-        to {
-          transform: scale(1);
-          opacity: 1;
-        }
+        from { transform: scale(0.85); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
       }
       .modal h3 {
         font-size: 18px;
@@ -632,9 +570,7 @@
         border-radius: 50%;
         cursor: pointer;
         border: 2.5px solid transparent;
-        transition:
-          transform 0.15s,
-          border-color 0.15s;
+        transition: transform 0.15s, border-color 0.15s;
         flex-shrink: 0;
       }
       .color-swatch:hover {
@@ -683,7 +619,6 @@
         background: var(--brown);
       }
 
-      /* Progress */
       .progress-bar {
         height: 5px;
         background: var(--cream3);
@@ -698,7 +633,6 @@
         transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
       }
 
-      /* Confetti */
       .confetti-piece {
         position: fixed;
         width: 8px;
@@ -709,17 +643,10 @@
         animation: confettiFall 1.2s ease-in forwards;
       }
       @keyframes confettiFall {
-        0% {
-          transform: translateY(-20px) rotate(0deg);
-          opacity: 1;
-        }
-        100% {
-          transform: translateY(60vh) rotate(720deg);
-          opacity: 0;
-        }
+        0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+        100% { transform: translateY(60vh) rotate(720deg); opacity: 0; }
       }
 
-      /* Mobile swipe hint */
       .swipe-hint {
         font-size: 11px;
         color: var(--text-muted);
@@ -727,7 +654,6 @@
         margin-bottom: 6px;
       }
 
-      /* Scrollbar */
       ::-webkit-scrollbar {
         width: 5px;
         height: 5px;
@@ -741,12 +667,8 @@
       }
 
       @media (max-width: 480px) {
-        .main {
-          padding: 16px 12px 100px;
-        }
-        .topbar {
-          padding: 12px 12px 0;
-        }
+        .main { padding: 16px 12px 100px; }
+        .topbar { padding: 12px 12px 0; }
       }
     </style>
   </head>
@@ -769,6 +691,11 @@
       <div class="ctx-item danger" id="ctxDelete">🗑️ 刪除分頁</div>
     </div>
 
+    <div class="ctx-menu" id="folderCtxMenu">
+      <div class="ctx-item" id="ctxFolderRename">✏️ 重新命名資料夾</div>
+      <div class="ctx-item danger" id="ctxFolderDelete">🗑️ 刪除資料夾</div>
+    </div>
+
     <div class="modal-bg" id="tabModal">
       <div class="modal">
         <h3 id="modalTitle">新增分頁</h3>
@@ -778,25 +705,11 @@
           placeholder="分頁名稱"
           maxlength="20"
         />
-        <div
-          style="
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 600;
-          "
-        >
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">
           選擇顏色
         </div>
         <div class="color-picker" id="colorPicker"></div>
-        <div
-          style="
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            font-weight: 600;
-          "
-        >
+        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">
           加入資料夾（選填）
         </div>
         <select id="folderSelect">
@@ -811,7 +724,7 @@
 
     <div class="modal-bg" id="folderModal">
       <div class="modal">
-        <h3>新增資料夾</h3>
+        <h3 id="folderModalTitle">新增資料夾</h3>
         <input
           type="text"
           id="folderNameInput"
@@ -840,9 +753,8 @@
 
     <script>
       // ===================== STATE (狀態管理) =====================
-      // 【學習點：狀態驅動開發】我們不直接用 JS 去修改網頁上的字，而是修改這份資料（state），然後呼叫 render() 重繪畫面。
       let state = {
-        title: "我的計劃本", // 新增一個欄位存放自訂標題
+        title: "我的計劃本",
         folders: [
           { id: "f1", name: "生活" },
           { id: "f2", name: "工作" },
@@ -885,17 +797,11 @@
       };
 
       const TAB_COLORS = [
-        "#F2A7B8",
-        "#7BC8A4",
-        "#F7D98C",
-        "#A7C4E8",
-        "#C4A8E8",
-        "#F2C4A8",
-        "#A8E8D4",
-        "#E8A7C4",
+        "#F2A7B8", "#7BC8A4", "#F7D98C", "#A7C4E8", 
+        "#C4A8E8", "#F2C4A8", "#A8E8D4", "#E8A7C4"
       ];
 
-      // ===================== SAVE/LOAD (本機快取) =====================
+      // ===================== SAVE/LOAD =====================
       function saveState() {
         try {
           localStorage.setItem("plannerState", JSON.stringify(state));
@@ -906,14 +812,13 @@
           const s = localStorage.getItem("plannerState");
           if (s) {
             state = JSON.parse(s);
-            if (!state.title) state.title = "我的計劃本"; // 防呆機制
+            if (!state.title) state.title = "我的計劃本";
           }
         } catch (e) {}
       }
 
       // ===================== RENDER (畫面渲染) =====================
       function render() {
-        // 同步自訂標題（如果使用者目前正在輸入，就不要去覆蓋它的游標）
         const titleEl = document.getElementById("topbarTitleText");
         if (document.activeElement !== titleEl) {
           titleEl.textContent = state.title || "我的計劃本";
@@ -927,12 +832,10 @@
       function renderTabs() {
         const wrap = document.getElementById("tabsWrap");
         const addBtn = document.getElementById("addTabBtn");
-
-        // 清空舊的分頁元件
+        
         wrap.querySelectorAll(".tab, .tab-group").forEach((el) => el.remove());
 
-        // 分組整理：依照資料夾分類
-        const grouped = {};
+        const grouped = {}; 
         const ungrouped = [];
         state.tabs.forEach((tab) => {
           if (tab.folderId) {
@@ -943,25 +846,21 @@
           }
         });
 
-        // 渲染沒有在資料夾裡面的獨立分頁
         ungrouped.forEach((tab) => {
           const el = makeTabEl(tab);
           wrap.insertBefore(el, addBtn);
         });
 
-        // 渲染資料夾群組
         state.folders.forEach((folder) => {
-          const tabs = grouped[folder.id] || []; // 【修改點】即使是空資料夾也給空陣列，不要跳出，這樣才能拖東西進去。
-
+          const tabs = grouped[folder.id] || [];
+          
           const group = document.createElement("div");
           group.className = "tab-group";
           group.setAttribute("data-folder", folder.id);
 
-          // --- 【技術學習點：HTML5 拖放 API (放置目標)】 ---
-          // 必須阻斷 dragover 的預設行為，瀏覽器才允許我們放開滑鼠進行 drop
           group.addEventListener("dragover", (e) => {
             e.preventDefault();
-            group.classList.add("dragover"); // 加上高亮虛線樣式
+            group.classList.add("dragover");
           });
           group.addEventListener("dragleave", () => {
             group.classList.remove("dragover");
@@ -969,23 +868,38 @@
           group.addEventListener("drop", (e) => {
             e.preventDefault();
             group.classList.remove("dragover");
-            const tabId = e.dataTransfer.getData("text/plain"); // 取得被拖拽分頁的 ID
+            const tabId = e.dataTransfer.getData("text/plain");
             const folderId = group.getAttribute("data-folder");
-
-            const targetTab = state.tabs.find((t) => t.id === tabId);
+            
+            const targetTab = state.tabs.find(t => t.id === tabId);
             if (targetTab) {
-              targetTab.folderId = folderId; // 變更資料夾歸屬
+              targetTab.folderId = folderId;
               render();
             }
           });
 
+          // 【功能新增】資料夾標籤：顯示名字，並綁定右鍵/長按事件
           const fLabel = document.createElement("span");
           fLabel.className = "folder-icon";
-          fLabel.textContent = "📁";
-          fLabel.title = folder.name;
+          fLabel.textContent = `📁 ${folder.name}`;
+          fLabel.title = "按右鍵/長按管理資料夾";
+          
+          // 綁定資料夾右鍵選單
+          fLabel.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showFolderCtxMenu(e, folder.id);
+          });
+
+          // 手機端長按資料夾機制
+          let fTimer;
+          fLabel.addEventListener("touchstart", () => {
+            fTimer = setTimeout(() => showFolderCtxMenu(null, folder.id, fLabel), 600);
+          }, { passive: true });
+          fLabel.addEventListener("touchend", () => clearTimeout(fTimer), { passive: true });
+          fLabel.addEventListener("touchmove", () => clearTimeout(fTimer), { passive: true });
+
           group.appendChild(fLabel);
 
-          // 渲染這個資料夾內的所有分頁
           tabs.forEach((tab) => {
             const el = makeTabEl(tab);
             group.appendChild(el);
@@ -999,21 +913,17 @@
         el.className = "tab" + (state.activeTab === tab.id ? " active" : "");
         el.setAttribute("data-tabid", tab.id);
         el.innerHTML = `<span class="tab-color-dot" style="background:${tab.color}"></span>${tab.name}`;
-
-        // --- 【技術學習點：HTML5 拖放 API (可拖拽元件)】 ---
-        el.setAttribute("draggable", "true"); // 宣告這個 div 是可拖拽的
+        
+        el.setAttribute("draggable", "true");
         el.addEventListener("dragstart", (e) => {
-          e.dataTransfer.setData("text/plain", tab.id); // 將分頁 ID 綁入拖放事件暫存區
-          el.classList.add("dragging"); // 變成半透明
+          e.dataTransfer.setData("text/plain", tab.id);
+          el.classList.add("dragging");
         });
         el.addEventListener("dragend", () => {
           el.classList.remove("dragging");
-          document
-            .querySelectorAll(".tab-group")
-            .forEach((g) => g.classList.remove("dragover"));
+          document.querySelectorAll(".tab-group").forEach(g => g.classList.remove("dragover"));
         });
 
-        // 點擊事件與右鍵選單
         el.addEventListener("click", () => {
           state.activeTab = tab.id;
           render();
@@ -1023,22 +933,13 @@
           showCtxMenu(e, tab.id);
         });
 
-        // 手機長按邏輯
         let pressTimer;
-        el.addEventListener(
-          "touchstart",
-          () => {
-            pressTimer = setTimeout(() => showCtxMenu(null, tab.id, el), 600);
-          },
-          { passive: true },
-        );
-        el.addEventListener("touchend", () => clearTimeout(pressTimer), {
-          passive: true,
-        });
-        el.addEventListener("touchmove", () => clearTimeout(pressTimer), {
-          passive: true,
-        });
-
+        el.addEventListener("touchstart", () => {
+          pressTimer = setTimeout(() => showCtxMenu(null, tab.id, el), 600);
+        }, { passive: true });
+        el.addEventListener("touchend", () => clearTimeout(pressTimer), { passive: true });
+        el.addEventListener("touchmove", () => clearTimeout(pressTimer), { passive: true });
+        
         return el;
       }
 
@@ -1047,8 +948,7 @@
         main.innerHTML = "";
         state.tabs.forEach((tab) => {
           const page = document.createElement("div");
-          page.className =
-            "page" + (state.activeTab === tab.id ? " active" : "");
+          page.className = "page" + (state.activeTab === tab.id ? " active" : "");
           page.setAttribute("data-page", tab.id);
           page.innerHTML = buildPageHTML(tab);
           main.appendChild(page);
@@ -1060,9 +960,7 @@
         const done = tab.items.filter((i) => i.done).length;
         const total = tab.items.length;
         const pct = total ? Math.round((done / total) * 100) : 0;
-        const folderName = tab.folderId
-          ? (state.folders.find((f) => f.id === tab.folderId) || {}).name
-          : null;
+        const folderName = tab.folderId ? (state.folders.find((f) => f.id === tab.folderId) || {}).name : null;
 
         return `
           <div class="list-header">
@@ -1104,14 +1002,10 @@
 
       function attachPageEvents(page, tab) {
         if (page.querySelector(`[data-additem="${tab.id}"]`))
-          page
-            .querySelector(`[data-additem="${tab.id}"]`)
-            .addEventListener("click", () => toggleAddForm(tab.id));
+          page.querySelector(`[data-additem="${tab.id}"]`).addEventListener("click", () => toggleAddForm(tab.id));
 
         if (page.querySelector(`[data-confirmitem="${tab.id}"]`))
-          page
-            .querySelector(`[data-confirmitem="${tab.id}"]`)
-            .addEventListener("click", () => addItem(tab.id));
+          page.querySelector(`[data-confirmitem="${tab.id}"]`).addEventListener("click", () => addItem(tab.id));
 
         const input = page.querySelector(`#addInput_${tab.id}`);
         if (input)
@@ -1130,11 +1024,9 @@
           });
         });
 
-        // --- 【技術學習點：點擊垃圾桶才刪除】 ---
-        // 我們直接將點擊事件綁定在 .delete-bg 本身，不受左滑卡片影響
         page.querySelectorAll(".delete-bg").forEach((btn) => {
           btn.addEventListener("click", (e) => {
-            e.stopPropagation(); // 阻止事件冒泡，不讓外層其他點擊事件誤觸
+            e.stopPropagation();
             const itemId = btn.closest(".todo-item").getAttribute("data-item");
             deleteItem(itemId, tab.id);
           });
@@ -1145,13 +1037,10 @@
         });
       }
 
-      // ===================== SWIPE TO DELETE (手勢滑動邏輯) =====================
+      // ===================== SWIPE TO DELETE =====================
       function attachSwipe(el, tabId) {
         const inner = el.querySelector(".todo-inner");
-        let startX = 0,
-          curX = 0,
-          dragging = false,
-          revealed = false;
+        let startX = 0, curX = 0, dragging = false, revealed = false;
 
         function onStart(x) {
           startX = x;
@@ -1161,22 +1050,19 @@
         function onMove(x) {
           if (!dragging) return;
           curX = x;
-          // 計算手指或滑動的偏移量，若是已經拉開狀態，要扣除基本 80px 寬度
           let dx = curX - startX;
           if (revealed) dx -= 80;
-
-          const finalX = Math.max(-100, Math.min(0, dx)); // 限制邊界，最多滑 100px 阻尼
+          
+          const finalX = Math.max(-100, Math.min(0, dx));
           inner.style.transition = "none";
           inner.style.transform = `translateX(${finalX}px)`;
         }
         function onEnd() {
           if (!dragging) return;
           dragging = false;
-          inner.style.transition =
-            "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-
+          inner.style.transition = "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+          
           const dx = curX - startX;
-          // 判定：如果滑動超過 40 像素就自動彈開固定，不然就縮回
           if (dx < -40) {
             inner.style.transform = "translateX(-80px)";
             revealed = true;
@@ -1186,48 +1072,25 @@
           }
         }
 
-        // 手機觸控事件
-        el.addEventListener(
-          "touchstart",
-          (e) => onStart(e.touches[0].clientX),
-          { passive: true },
-        );
-        el.addEventListener(
-          "touchmove",
-          (e) => {
-            if (dragging) onMove(e.touches[0].clientX);
-          },
-          { passive: true },
-        );
+        el.addEventListener("touchstart", (e) => onStart(e.touches[0].clientX), { passive: true });
+        el.addEventListener("touchmove", (e) => { if (dragging) onMove(e.touches[0].clientX); }, { passive: true });
         el.addEventListener("touchend", () => onEnd());
 
-        // 電腦滑鼠事件
-        inner.addEventListener("mousedown", (e) => {
-          if (e.button === 0) onStart(e.clientX);
-        });
-        window.addEventListener("mousemove", (e) => {
-          if (dragging) onMove(e.clientX);
-        });
+        inner.addEventListener("mousedown", (e) => { if (e.button === 0) onStart(e.clientX); });
+        window.addEventListener("mousemove", (e) => { if (dragging) onMove(e.clientX); });
         window.addEventListener("mouseup", () => onEnd());
 
-        // --- 【技術學習點：事件捕獲與收回手勢】 ---
-        // 當計畫項目處於「展開垃圾桶」狀態下，如果使用者去點擊文字，我們應該將它收回而不是觸發打勾。
-        // 這裡設定 { capture: true } (事件捕獲)，讓它在點擊事件往下傳遞前先行攔截！
-        inner.addEventListener(
-          "click",
-          (e) => {
-            if (revealed) {
-              e.preventDefault();
-              e.stopPropagation(); // 攔截！不讓點擊傳給底下的打勾按鈕
-              inner.style.transform = "translateX(0)"; // 彈回原位
-              revealed = false;
-            }
-          },
-          { capture: true },
-        );
+        inner.addEventListener("click", (e) => {
+          if (revealed) {
+            e.preventDefault();
+            e.stopPropagation();
+            inner.style.transform = "translateX(0)";
+            revealed = false;
+          }
+        }, { capture: true });
       }
 
-      // ===================== ACTIONS (各類計畫操作) =====================
+      // ===================== ACTIONS =====================
       function toggleAddForm(tabId) {
         const form = document.getElementById(`addForm_${tabId}`);
         if (!form) return;
@@ -1264,9 +1127,8 @@
             item.done = true;
             btnEl.classList.add("done");
             btnEl.querySelector(".checkmark").style.display = "block";
-            btnEl.querySelector(".ring").style.animation =
-              "ringPop 0.5s ease-out forwards";
-
+            btnEl.querySelector(".ring").style.animation = "ringPop 0.5s ease-out forwards";
+            
             const itemEl = btnEl.closest(".todo-item");
             if (itemEl) itemEl.classList.add("done");
             spawnConfetti(btnEl.getBoundingClientRect());
@@ -1291,13 +1153,9 @@
         const done = tab.items.filter((i) => i.done).length;
         const total = tab.items.length;
         const pct = total ? Math.round((done / total) * 100) : 0;
-        const fill = document.querySelector(
-          `[data-page="${tabId}"] .progress-fill`,
-        );
+        const fill = document.querySelector(`[data-page="${tabId}"] .progress-fill`);
         if (fill) fill.style.width = pct + "%";
-        const subtitle = document.querySelector(
-          `[data-page="${tabId}"] .list-subtitle`,
-        );
+        const subtitle = document.querySelector(`[data-page="${tabId}"] .list-subtitle`);
         if (subtitle) subtitle.textContent = `${done}/${total} 完成 · ${pct}%`;
       }
 
@@ -1308,7 +1166,6 @@
         render();
       }
 
-      // ===================== CONFETTI (撒花特效) =====================
       function spawnConfetti(rect) {
         const colors = ["#F2A7B8", "#7BC8A4", "#F7D98C", "#A7C4E8", "#C4A8E8"];
         for (let i = 0; i < 10; i++) {
@@ -1331,14 +1188,14 @@
 
       // ===================== CONTEXT MENU (選單) =====================
       let ctxTabId = null;
+      let ctxFolderId = null; // 【新增】追蹤目前正在點擊哪一個資料夾的 ID
 
       function showCtxMenu(e, tabId, fromEl) {
         ctxTabId = tabId;
         const menu = document.getElementById("ctxMenu");
         menu.classList.add("visible");
         if (e) {
-          let x = e.clientX,
-            y = e.clientY;
+          let x = e.clientX, y = e.clientY;
           if (x + 160 > window.innerWidth) x = window.innerWidth - 165;
           if (y + 140 > window.innerHeight) y = window.innerHeight - 145;
           menu.style.left = x + "px";
@@ -1350,11 +1207,33 @@
         }
       }
 
+      // 【功能新增】顯示資料夾專屬右鍵選單的函式
+      function showFolderCtxMenu(e, folderId, fromEl) {
+        ctxFolderId = folderId;
+        const menu = document.getElementById("folderCtxMenu");
+        menu.classList.add("visible");
+        if (e) {
+          let x = e.clientX, y = e.clientY;
+          if (x + 160 > window.innerWidth) x = window.innerWidth - 165;
+          if (y + 140 > window.innerHeight) y = window.innerHeight - 145;
+          menu.style.left = x + "px";
+          menu.style.top = y + "px";
+        } else if (fromEl) {
+          const r = fromEl.getBoundingClientRect();
+          menu.style.left = r.left + "px";
+          menu.style.top = r.bottom + 4 + "px";
+        }
+      }
+
+      function hideCtxMenu() {
+        document.getElementById("ctxMenu").classList.remove("visible");
+        document.getElementById("folderCtxMenu").classList.remove("visible"); // 同步收回資料夾選單
+      }
+
       document.getElementById("ctxDelete").addEventListener("click", () => {
         if (!ctxTabId) return;
         state.tabs = state.tabs.filter((t) => t.id !== ctxTabId);
-        if (state.activeTab === ctxTabId)
-          state.activeTab = state.tabs[0]?.id || null;
+        if (state.activeTab === ctxTabId) state.activeTab = state.tabs[0]?.id || null;
         hideCtxMenu();
         render();
       });
@@ -1373,9 +1252,40 @@
         openMoveModal(ctxTabId);
       });
 
-      function hideCtxMenu() {
-        document.getElementById("ctxMenu").classList.remove("visible");
-      }
+      // --- 【功能新增】資料夾右鍵選單點擊事件處理 ---
+
+      // 1. 資料夾重新命名
+      document.getElementById("ctxFolderRename").addEventListener("click", () => {
+        if (!ctxFolderId) return;
+        const folder = state.folders.find(f => f.id === ctxFolderId);
+        if (!folder) return;
+        hideCtxMenu();
+        
+        // 進入編輯模式：設定暫存變數，並複用原有的 folderModal
+        editingFolderId = folder.id; 
+        document.getElementById("folderModalTitle").textContent = "編輯資料夾";
+        document.getElementById("folderNameInput").value = folder.name;
+        document.getElementById("folderModal").classList.add("visible");
+        setTimeout(() => document.getElementById("folderNameInput").focus(), 100);
+      });
+
+      // 2. 刪除資料夾
+      document.getElementById("ctxFolderDelete").addEventListener("click", () => {
+        if (!ctxFolderId) return;
+        const folder = state.folders.find(f => f.id === ctxFolderId);
+        if (!folder) return;
+        hideCtxMenu();
+
+        if (confirm(`確定要刪除「${folder.name}」資料夾嗎？\n（資料夾內的分頁將自動移至外層，計畫內容不會遺失喔！）`)) {
+          // A. 從資料夾陣列中移除
+          state.folders = state.folders.filter(f => f.id !== ctxFolderId);
+          // B. 安全解耦：把原本屬於該資料夾的分頁 folderId 清空
+          state.tabs.forEach(tab => {
+            if (tab.folderId === ctxFolderId) tab.folderId = null;
+          });
+          render();
+        }
+      });
 
       document.addEventListener("click", (e) => {
         if (!e.target.closest(".ctx-menu")) hideCtxMenu();
@@ -1383,31 +1293,25 @@
 
       // ===================== MODAL WINDOWS =====================
       let editingTabId = null;
+      let editingFolderId = null; // 【新增】用來儲存當前正在編輯的資料夾 ID
       let selectedColor = TAB_COLORS[0];
 
       function openTabModal(existingTab) {
         editingTabId = existingTab ? existingTab.id : null;
         selectedColor = existingTab ? existingTab.color : TAB_COLORS[0];
 
-        document.getElementById("modalTitle").textContent = existingTab
-          ? "編輯分頁"
-          : "新增分頁";
-        document.getElementById("tabNameInput").value = existingTab
-          ? existingTab.name
-          : "";
+        document.getElementById("modalTitle").textContent = existingTab ? "編輯分頁" : "新增分頁";
+        document.getElementById("tabNameInput").value = existingTab ? existingTab.name : "";
 
         const cp = document.getElementById("colorPicker");
         cp.innerHTML = "";
         TAB_COLORS.forEach((c) => {
           const sw = document.createElement("div");
-          sw.className =
-            "color-swatch" + (c === selectedColor ? " selected" : "");
+          sw.className = "color-swatch" + (c === selectedColor ? " selected" : "");
           sw.style.background = c;
           sw.addEventListener("click", () => {
             selectedColor = c;
-            cp.querySelectorAll(".color-swatch").forEach((s) =>
-              s.classList.remove("selected"),
-            );
+            cp.querySelectorAll(".color-swatch").forEach((s) => s.classList.remove("selected"));
             sw.classList.add("selected");
           });
           cp.appendChild(sw);
@@ -1422,7 +1326,7 @@
           if (existingTab && existingTab.folderId === f.id) opt.selected = true;
           fs.appendChild(opt);
         });
-
+        
         const newOpt = document.createElement("option");
         newOpt.value = "__new__";
         newOpt.textContent = "＋ 新增資料夾…";
@@ -1432,9 +1336,7 @@
           if (fs.value === "__new__") {
             fs.removeEventListener("change", handler);
             hideTabModal();
-            openFolderModal(() => {
-              openTabModal(existingTab);
-            });
+            openFolderModal(() => { openTabModal(existingTab); });
           }
         });
 
@@ -1446,12 +1348,8 @@
         document.getElementById("tabModal").classList.remove("visible");
       }
 
-      document
-        .getElementById("addTabBtn")
-        .addEventListener("click", () => openTabModal(null));
-      document
-        .getElementById("modalCancel")
-        .addEventListener("click", hideTabModal);
+      document.getElementById("addTabBtn").addEventListener("click", () => openTabModal(null));
+      document.getElementById("modalCancel").addEventListener("click", hideTabModal);
 
       document.getElementById("modalConfirm").addEventListener("click", () => {
         const name = document.getElementById("tabNameInput").value.trim();
@@ -1482,69 +1380,69 @@
         render();
       });
 
-      document
-        .getElementById("tabNameInput")
-        .addEventListener("keydown", (e) => {
-          if (e.key === "Enter")
-            document.getElementById("modalConfirm").click();
-        });
+      document.getElementById("tabNameInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("modalConfirm").click();
+      });
 
       let folderCallback = null;
       function openFolderModal(cb) {
         folderCallback = cb;
+        editingFolderId = null; // 確保是新增模式
+        document.getElementById("folderModalTitle").textContent = "新增資料夾";
         document.getElementById("folderNameInput").value = "";
         document.getElementById("folderModal").classList.add("visible");
-        setTimeout(
-          () => document.getElementById("folderNameInput").focus(),
-          100,
-        );
+        setTimeout(() => document.getElementById("folderNameInput").focus(), 100);
       }
 
       document.getElementById("folderCancel").addEventListener("click", () => {
         document.getElementById("folderModal").classList.remove("visible");
-        if (folderCallback) {
-          folderCallback();
-          folderCallback = null;
-        }
+        editingFolderId = null;
+        if (folderCallback) { folderCallback(); folderCallback = null; }
       });
 
+      // 【修改點】讓確認鍵同時支援「新增模式」與「編輯模式」的判斷
       document.getElementById("folderConfirm").addEventListener("click", () => {
         const name = document.getElementById("folderNameInput").value.trim();
         if (!name) {
           document.getElementById("folderNameInput").focus();
           return;
         }
-        const id = "f" + ++state.nextId;
-        state.folders.push({ id, name });
-        document.getElementById("folderModal").classList.remove("visible");
-        if (folderCallback) {
-          folderCallback();
-          setTimeout(() => {
-            const fs = document.getElementById("folderSelect");
-            if (fs) {
-              const opt = document.createElement("option");
-              opt.value = id;
-              opt.textContent = name;
-              opt.selected = true;
-              const newOpt = Array.from(fs.options).find(
-                (o) => o.value === "__new__",
-              );
-              fs.insertBefore(opt, newOpt);
-              fs.value = id;
-            }
-          }, 50);
-          folderCallback = null;
+
+        if (editingFolderId) {
+          // 💡 編輯模式：更新現有資料夾名稱
+          const folder = state.folders.find(f => f.id === editingFolderId);
+          if (folder) folder.name = name;
+          editingFolderId = null; // 清空狀態
         } else {
-          render();
+          // 💡 新增模式：推入新資料
+          const id = "f" + ++state.nextId;
+          state.folders.push({ id, name });
+          
+          if (folderCallback) {
+            document.getElementById("folderModal").classList.remove("visible");
+            folderCallback();
+            setTimeout(() => {
+              const fs = document.getElementById("folderSelect");
+              if (fs) {
+                const opt = document.createElement("option");
+                opt.value = id; opt.textContent = name; opt.selected = true;
+                const newOpt = Array.from(fs.options).find((o) => o.value === "__new__");
+                fs.insertBefore(opt, newOpt);
+                fs.value = id;
+              }
+            }, 50);
+            folderCallback = null;
+            return;
+          }
         }
+
+        document.getElementById("folderModal").classList.remove("visible");
+        render();
       });
 
-      document
-        .getElementById("folderNameInput")
-        .addEventListener("keydown", (e) => {
-          if (e.key === "Enter")
-            document.getElementById("folderConfirm").click();
-        });
+      document.getElementById("folderNameInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("folderConfirm").click();
+      });
 
       let moveTabId = null;
       function openMoveModal(tabId) {
@@ -1554,8 +1452,7 @@
         sel.innerHTML = '<option value="">不加入資料夾</option>';
         state.folders.forEach((f) => {
           const opt = document.createElement("option");
-          opt.value = f.id;
-          opt.textContent = f.name;
+          opt.value = f.id; opt.textContent = f.name;
           if (tab && tab.folderId === f.id) opt.selected = true;
           sel.appendChild(opt);
         });
@@ -1566,74 +1463,57 @@
         document.getElementById("moveModal").classList.remove("visible");
       });
 
-      document
-        .getElementById("moveConfirmBtn")
-        .addEventListener("click", () => {
-          const folderId =
-            document.getElementById("moveFolderSelect").value || null;
-          const tab = state.tabs.find((t) => t.id === moveTabId);
-          if (tab) tab.folderId = folderId;
-          document.getElementById("moveModal").classList.remove("visible");
-          render();
-        });
+      document.getElementById("moveConfirmBtn").addEventListener("click", () => {
+        const folderId = document.getElementById("moveFolderSelect").value || null;
+        const tab = state.tabs.find((t) => t.id === moveTabId);
+        if (tab) tab.folderId = folderId;
+        document.getElementById("moveModal").classList.remove("visible");
+        render();
+      });
 
       document.querySelectorAll(".modal-bg").forEach((bg) => {
-        bg.addEventListener("click", (e) => {
-          if (e.target === bg) bg.classList.remove("visible");
-        });
+        bg.addEventListener("click", (e) => { if (e.target === bg) { bg.classList.remove("visible"); editingFolderId = null; } });
       });
 
       // ===================== HELPERS =====================
       function escHtml(str) {
-        return str
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;");
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
       }
 
-      // ===================== 【技術點：初始化與事件監聽設定】 =====================
+      // ===================== INITIALIZATION =====================
       loadState();
-      if (!state.activeTab && state.tabs.length)
-        state.activeTab = state.tabs[0].id;
+      if (!state.activeTab && state.tabs.length) state.activeTab = state.tabs[0].id;
 
-      // 1. 綁定自訂標題的儲存與失焦機制
       const titleTextEl = document.getElementById("topbarTitleText");
-
-      // 當使用者打完字點擊旁邊（失焦）時觸發儲存
       titleTextEl.addEventListener("blur", () => {
         const newTitle = titleTextEl.textContent.trim();
-        state.title = newTitle || "我的計劃本"; // 如果被刪光了，預設還原成我的計劃本
+        state.title = newTitle || "我的計劃本";
         saveState();
       });
 
-      // 當使用者在標題按 Enter 鍵，直接強制失焦儲存
       titleTextEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
-          e.preventDefault(); // 阻止瀏覽器在 contenteditable 換行
-          titleTextEl.blur(); // 觸發 blur 事件
+          e.preventDefault();
+          titleTextEl.blur();
         }
       });
 
-      // 2. 設定大外層的放置事件，允許將分頁「拖拽到空白處以移出任何資料夾」
       const tabsWrapEl = document.getElementById("tabsWrap");
       tabsWrapEl.addEventListener("dragover", (e) => {
         e.preventDefault();
       });
       tabsWrapEl.addEventListener("drop", (e) => {
-        // 【利用冒泡判定】如果使用者放開滑鼠的位置「不屬於」任何一個資料夾群組 (.tab-group)
         if (!e.target.closest(".tab-group")) {
           e.preventDefault();
           const tabId = e.dataTransfer.getData("text/plain");
-          const targetTab = state.tabs.find((t) => t.id === tabId);
+          const targetTab = state.tabs.find(t => t.id === tabId);
           if (targetTab) {
-            targetTab.folderId = null; // 清除資料夾綁定（移到外面）
+            targetTab.folderId = null;
             render();
           }
         }
       });
 
-      // 開始初次畫面渲染
       render();
     </script>
   </body>
