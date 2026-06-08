@@ -1,425 +1,1883 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>✨ 我的計劃本（協作版）</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
-  
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+    />
+    <title>✨ 我的計劃本（協作版）</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Zen+Maru+Gothic:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 
-  <style>
-    :root {
-      --cream: #faf7f2;
-      --cream2: #f4efe6;
-      --cream3: #ede6d8;
-      --brown-light: #c4a882;
-      --brown: #9b7b5a;
-      --brown-dark: #6b5240;
-      --pink: #f2a7b8;
-      --pink-light: #fce8ee;
-      --green: #7bc8a4;
-      --green-light: #e8f7f0;
-      --yellow: #f7d98c;
-      --yellow-light: #fef8e7;
-      --blue: #a7c4e8;
-      --blue-light: #eaf2fb;
-      --purple: #c4a8e8;
-      --purple-light: #f3edfb;
-      --text: #5c4a38;
-      --text-muted: #9b8878;
-      --border: #e2d8cc;
-      --shadow: rgba(156, 123, 90, 0.12);
-      --radius: 16px;
-      --radius-sm: 10px;
-    }
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Nunito", "Zen Maru Gothic", sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
-
-    /* 登入介面 */
-    #loginScreen { position: fixed; inset: 0; background: linear-gradient(135deg, var(--cream) 0%, var(--cream2) 100%); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
-    .login-card { background: white; border-radius: var(--radius); padding: 40px; max-width: 400px; width: 100%; box-shadow: 0 12px 40px var(--shadow); }
-    .login-card h1 { font-size: 28px; margin-bottom: 24px; color: var(--brown-dark); text-align: center; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
-    .form-group input { width: 100%; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 14px; background: var(--cream); outline: none; }
-    .form-group input:focus { border-color: var(--brown-light); background: white; }
-    .login-buttons { display: flex; gap: 10px; }
-    .btn-primary, .btn-secondary { flex: 1; padding: 12px 20px; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-    .btn-primary { background: var(--brown-dark); color: white; }
-    .btn-primary:hover { background: var(--brown); }
-    .btn-secondary { background: var(--cream2); color: var(--text); border: 1.5px solid var(--border); }
-    .btn-secondary:hover { background: var(--cream3); }
-
-    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-bottom: 20px; text-align: center; }
-    .status-online { background: var(--green-light); color: var(--green); }
-    .status-offline { background: #ffebee; color: #c53030; }
-
-    .room-code-section { background: var(--yellow-light); border: 1.5px solid var(--yellow); border-radius: var(--radius-sm); padding: 14px; margin: 20px 0; text-align: center; }
-    .room-code { font-size: 24px; font-weight: 800; color: var(--brown-dark); letter-spacing: 4px; margin: 8px 0; }
-    .copy-btn { background: var(--brown-dark); color: white; border: none; border-radius: var(--radius-sm); padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; }
-
-    /* 主應用介面 */
-    #appScreen { display: none; }
-    .topbar { background: var(--cream); border-bottom: 1.5px solid var(--border); padding: 14px 20px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
-    .topbar-left { display: flex; align-items: center; gap: 12px; }
-    .topbar-title { font-size: 20px; font-weight: 800; color: var(--brown-dark); outline: none; }
-    .online-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
-    .online-indicator.offline { background: #d32f2f; }
-    .topbar-users { font-size: 12px; color: var(--text-muted); font-weight: 600; }
-    .topbar-right { display: flex; gap: 10px; }
-    .room-info-btn, .leave-btn { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
-    .room-info-btn:hover { background: var(--cream2); }
-    .leave-btn:hover { border-color: #d32f2f; color: #d32f2f; }
-
-    .main-content { padding: 20px 16px 100px; max-width: 680px; margin: 0 auto; }
-    .tabs-strip { display: flex; gap: 4px; margin-bottom: 20px; overflow-x: auto; align-items: center; }
-    .tab { padding: 8px 14px; border-radius: 10px 10px 0 0; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-muted); border: 1.5px solid transparent; white-space: nowrap; }
-    .tab.active { color: var(--brown-dark); background: white; border-color: var(--border); border-bottom-color: white; }
-    .tab-add { padding: 8px 12px; color: var(--brown-light); cursor: pointer; font-size: 16px; }
-
-    /* 待辦項目清單 */
-    .todo-list { display: flex; flex-direction: column; gap: 8px; }
-    .todo-item { background: white; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .todo-item.done { opacity: 0.6; background: var(--cream2); }
-    .todo-item.done .todo-text { text-decoration: line-through; color: var(--text-muted); }
-    .todo-left { display: flex; align-items: center; gap: 12px; flex: 1; }
-    .todo-checkbox { width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
-    .todo-checkbox.done { border-color: var(--green); background: var(--green-light); color: var(--green); }
-    .todo-text { font-size: 14px; font-weight: 600; }
-    .todo-delete { background: none; border: none; color: #d32f2f; cursor: pointer; font-size: 14px; font-weight: bold; padding: 4px; }
-
-    .add-form { display: flex; gap: 10px; margin-bottom: 16px; }
-    .add-form input { flex: 1; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 9px 13px; font-size: 14px; background: var(--cream); outline: none; }
-    .add-form input:focus { background: white; border-color: var(--brown-light); }
-    .add-btn { background: var(--pink); color: white; border: none; border-radius: var(--radius-sm); padding: 9px 16px; font-weight: 700; cursor: pointer; }
-
-    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
-    .sync-status { position: fixed; bottom: 20px; right: 20px; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px var(--shadow); }
-    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-
-    /* Modal */
-    .modal-bg { position: fixed; inset: 0; background: rgba(91, 70, 56, 0.35); display: none; align-items: center; justify-content: center; z-index: 500; }
-    .modal-bg.visible { display: flex; }
-    .modal { background: white; border-radius: var(--radius); padding: 24px; max-width: 360px; width: 100%; }
-    .modal h2 { font-size: 18px; margin-bottom: 16px; color: var(--brown-dark); }
-  </style>
-</head>
-<body>
-
-<div id="loginScreen">
-  <div class="login-card">
-    <h1>✨ 計劃本協作</h1>
-    <center><div id="statusBadge" class="status-badge status-offline">🔴 雲端載入中...</div></center>
-
-    <div class="form-group">
-      <label>你的名字</label>
-      <input type="text" id="nicknameInput" placeholder="例：小美" maxlength="20" />
-    </div>
-
-    <div class="form-group">
-      <label>房間代碼（留空建立新房間）</label>
-      <input type="text" id="roomCodeInput" placeholder="例：ABC12345" maxlength="8" />
-    </div>
-
-    <div class="login-buttons">
-      <button class="btn-primary" onclick="app.createRoom()">建立新房間</button>
-      <button class="btn-secondary" onclick="app.joinRoom()">加入房間</button>
-    </div>
-
-    <div id="roomCodeSection" class="room-code-section" style="display: none;">
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">📌 新房間建立成功！代碼為：</div>
-      <div class="room-code" id="displayRoomCode"></div>
-      <button class="copy-btn" onclick="app.copyRoomCode()">📋 複製代碼並進入</button>
-    </div>
-  </div>
-</div>
-
-<div id="appScreen">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="online-indicator" id="onlineIndicator"></div>
-      <div class="topbar-title" id="appTitle" contenteditable="true">我的計劃本</div>
-    </div>
-    <div class="topbar-users" id="userCount">1 人在線</div>
-    <div class="topbar-right">
-      <button class="room-info-btn" onclick="app.showRoomInfo()">📍 房間</button>
-      <button class="leave-btn" onclick="app.leaveRoom()">🚪 離開</button>
-    </div>
-  </div>
-
-  <div class="main-content">
-    <div class="add-form">
-      <input type="text" placeholder="新增待辦事項..." id="todoInput" maxlength="60" />
-      <button class="add-btn" onclick="app.addTodo()">加入</button>
-    </div>
-    
-    <div class="tabs-strip" id="tabsStrip">
-      </div>
-
-    <div class="todo-list" id="tabContent">
-      </div>
-  </div>
-
-  <div class="sync-status">
-    <div class="sync-dot" id="syncDot"></div>
-    <span id="syncText">已同步</span>
-  </div>
-</div>
-
-<div id="roomInfoModal" class="modal-bg">
-  <div class="modal">
-    <h2>📍 房間資訊</h2>
-    <div style="margin-bottom: 16px; margin-top:12px;">
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">房間代碼</div>
-      <div style="font-size: 18px; font-weight: 800; font-family: monospace; letter-spacing: 2px;" id="modalRoomCode"></div>
-    </div>
-    <div style="margin-bottom: 16px;">
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">目前在線</div>
-      <div style="font-size: 16px; font-weight: 600;" id="modalUserCount"></div>
-    </div>
-    <button class="btn-primary" style="width:100%" onclick="document.getElementById('roomInfoModal').classList.remove('visible')">關閉</button>
-  </div>
-</div>
-
-<script>
-  // Firebase 設定
-  const firebaseConfig = {
-    apiKey: "AIzaSyBO3BaSLWDB1DA6znk6kdo7MTN5kW56AWQ",
-    authDomain: "my-travel-planner-3c04a.firebaseapp.com",
-    databaseURL: "https://my-travel-planner-3c04a-default-rtdb.firebaseio.com",
-    projectId: "my-travel-planner-3c04a",
-    storageBucket: "my-travel-planner-3c04a.firebasestorage.app",
-    messagingSenderId: "1061443894751",
-    appId: "1:1061443894751:web:9117b1071228fffe05186a",
-    measurementId: "G-8DWEG0DFPZ"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-  let roomId = "";
-  let nickname = "";
-  let roomRef = null;
-  let isRemoteUpdate = false;
-
-  // 預設核心資料結構
-  let state = {
-    title: "我的計劃本",
-    tabs: [
-      { id: "t1", name: "今日任務" },
-      { id: "t2", name: "購物清單" }
-    ],
-    activeTab: "t1",
-    todos: [
-      { id: "i1", tabId: "t1", text: "喝 8 杯水 💧", done: false },
-      { id: "i2", tabId: "t1", text: "好好放鬆 🥐", done: true },
-      { id: "i3", tabId: "t2", text: "買鮮奶 🥛", done: false }
-    ]
-  };
-
-  // 檢測 Firebase 是否連線成功
-  db.ref(".info/connected").on("value", (snap) => {
-    const badge = document.getElementById("statusBadge");
-    if (snap.val() === true) {
-      badge.textContent = "🟢 雲端已連線";
-      badge.className = "status-badge status-online";
-    } else {
-      badge.textContent = "🔴 離線";
-      badge.className = "status-badge status-offline";
-    }
-  });
-
-  // 封裝成 app 供 HTML 按鈕點擊
-  const app = {
-    generateRoomCode() {
-      return Math.random().toString(36).substring(2, 10).toUpperCase();
-    },
-
-    createRoom() {
-      nickname = document.getElementById("nicknameInput").value.trim() || "匿名使用者";
-      const code = this.generateRoomCode();
-      document.getElementById("displayRoomCode").textContent = code;
-      document.getElementById("roomCodeSection").style.display = "block";
-      document.getElementById("roomCodeInput").value = code;
-    },
-
-    joinRoom() {
-      nickname = document.getElementById("nicknameInput").value.trim() || "匿名使用者";
-      roomId = document.getElementById("roomCodeInput").value.trim().toUpperCase();
-
-      if (!roomId) {
-        alert("請輸入房間代碼，或是點擊「建立新房間」！");
-        return;
+    <style>
+      /* 使用變數定義所有顏色，方便切換主題 */
+      :root {
+        --cream: #faf7f2;
+        --cream2: #f4efe6;
+        --cream3: #ede6d8;
+        --brown-light: #c4a882;
+        --brown: #9b7b5a;
+        --brown-dark: #6b5240;
+        --pink: #f2a7b8;
+        --pink-light: #fce8ee;
+        --green: #7bc8a4;
+        --green-light: #e8f7f0;
+        --yellow: #f7d98c;
+        --yellow-light: #fef8e7;
+        --blue: #a7c4e8;
+        --blue-light: #eaf2fb;
+        --purple: #c4a8e8;
+        --purple-light: #f3edfb;
+        --text: #5c4a38;
+        --text-muted: #9b8878;
+        --border: #e2d8cc;
+        --shadow: rgba(156, 123, 90, 0.12);
+        --radius: 16px;
+        --radius-sm: 10px;
       }
 
-      roomRef = db.ref("rooms/" + roomId);
-      this.initSync();
-    },
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
 
-    copyRoomCode() {
-      const code = document.getElementById("displayRoomCode").textContent;
-      navigator.clipboard.writeText(code).then(() => {
-        alert("代碼已複製到剪貼簿！正在進入房間...");
-        this.joinRoom();
-      });
-    },
+      body {
+        font-family: "Nunito", "Zen Maru Gothic", sans-serif;
+        background-color: var(--cream);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
 
-    initSync() {
-      // 監聽 Firebase 雲端資料變動
-      roomRef.on("value", (snapshot) => {
-        const data = snapshot.val();
-        isRemoteUpdate = true;
-        if (data && data.tabs) {
-          state = data;
-        } else {
-          // 乾淨的全新房間，推入預設結構
-          roomRef.set(state);
+      /* 登入介面 */
+      #loginScreen {
+        position: fixed;
+        inset: 0;
+        background: linear-gradient(135deg, var(--cream) 0%, var(--cream2) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 20px;
+      }
+      .login-card {
+        background: white;
+        border-radius: var(--radius);
+        padding: 40px;
+        max-width: 400px;
+        width: 100%;
+        box-shadow: 0 12px 40px var(--shadow);
+      }
+      .login-card h1 {
+        font-size: 28px;
+        margin-bottom: 24px;
+        color: var(--brown-dark);
+        text-align: center;
+      }
+      .form-group {
+        margin-bottom: 16px;
+      }
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+      }
+      .form-group input {
+        width: 100%;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        font-size: 14px;
+        background: var(--cream);
+        outline: none;
+      }
+      .form-group input:focus {
+        border-color: var(--brown-light);
+        background: white;
+      }
+      .login-buttons {
+        display: flex;
+        gap: 10px;
+      }
+      .btn-primary, .btn-secondary {
+        flex: 1;
+        padding: 12px 20px;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: var(--brown-dark);
+        color: white;
+      }
+      .btn-primary:hover {
+        background: var(--brown);
+      }
+      .btn-secondary {
+        background: var(--cream2);
+        color: var(--text);
+        border: 1.5px solid var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--cream3);
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .status-online {
+        background: var(--green-light);
+        color: var(--green);
+      }
+      .status-offline {
+        background: #ffebee;
+        color: #c53030;
+      }
+
+      .room-code-section {
+        background: var(--yellow-light);
+        border: 1.5px solid var(--yellow);
+        border-radius: var(--radius-sm);
+        padding: 14px;
+        margin: 20px 0;
+        text-align: center;
+      }
+      .room-code {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--brown-dark);
+        letter-spacing: 4px;
+        margin: 8px 0;
+      }
+      .copy-btn {
+        background: var(--brown-dark);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 8px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      /* 主應用介面（初始隱藏，連線後顯示） */
+      #appScreen {
+        display: none;
+      }
+
+      /* 頂部導覽列 */
+      .topbar {
+        background-color: var(--cream);
+        border-bottom: 1.5px solid var(--border);
+        padding: 14px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .topbar-title {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--brown-dark);
+        outline: none;
+        padding: 2px 6px;
+        border-radius: 6px;
+        transition: background 0.2s;
+      }
+
+      .topbar-title:focus {
+        background: var(--cream2);
+      }
+
+      .online-badge {
+        background-color: var(--green-light);
+        color: var(--green);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .online-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: var(--green);
+      }
+
+      .topbar-right {
+        display: flex;
+        gap: 10px;
+      }
+
+      /* 頁籤列 */
+      .tabs-container {
+        border-bottom: 1.5px solid var(--border);
+        background-color: white;
+        padding: 10px 20px 0;
+        position: sticky;
+        top: 59px;
+        z-index: 90;
+      }
+
+      .tabs-wrap {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        align-items: flex-end;
+      }
+
+      .tabs-wrap::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tab {
+        padding: 10px 16px;
+        background-color: var(--cream2);
+        border: 1.5px solid var(--border);
+        border-bottom: none;
+        border-radius: 12px 12px 0 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        bottom: -1.5px;
+        user-select: none;
+      }
+
+      .tab.active {
+        background-color: var(--cream);
+        color: var(--brown-dark);
+        padding-bottom: 12px;
+        z-index: 2;
+        border-color: var(--border);
+        border-bottom-color: var(--cream);
+      }
+
+      .tab-color-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .tab-group {
+        display: flex;
+        align-items: flex-end;
+        background: var(--cream3);
+        padding: 3px 3px 0;
+        border-radius: 14px 14px 0 0;
+        border: 1.5px dashed var(--brown-light);
+        border-bottom: none;
+        gap: 3px;
+        transition: background 0.2s;
+        margin-right: 4px;
+      }
+
+      .tab-group.dragover {
+        background: var(--brown-light);
+      }
+
+      .folder-icon {
+        padding: 8px 6px;
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--brown-dark);
+        cursor: contextmenu;
+        user-select: none;
+        white-space: nowrap;
+      }
+
+      .add-tab-btn {
+        padding: 8px 14px;
+        color: var(--brown-light);
+        font-weight: 800;
+        font-size: 16px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        margin-bottom: 4px;
+      }
+
+      /* 主內容區 */
+      .main-content {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 24px 16px 100px;
+      }
+
+      .page {
+        display: none;
+      }
+
+      .page.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(4px);
         }
-        this.render();
-        isRemoteUpdate = false;
-
-        // 切換畫面
-        document.getElementById("loginScreen").style.display = "none";
-        document.getElementById("appScreen").style.display = "block";
-      });
-
-      // 追蹤在線人數
-      const presenceRef = db.ref(`rooms/${roomId}/users/${nickname}`);
-      presenceRef.set(true);
-      presenceRef.onDisconnect().remove();
-
-      db.ref(`rooms/${roomId}/users`).on("value", (snap) => {
-        const count = snap.numChildren() || 1;
-        document.getElementById("userCount").textContent = `${count} 人在線`;
-      });
-    },
-
-    save() {
-      if (!isRemoteUpdate && roomRef) {
-        document.getElementById("syncDot").style.background = "var(--yellow)";
-        document.getElementById("syncText").textContent = "同步中...";
-        roomRef.set(state).then(() => {
-          document.getElementById("syncDot").style.background = "var(--green)";
-          document.getElementById("syncText").textContent = "已同步";
-        });
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
-    },
 
-    render() {
-      document.getElementById("appTitle").textContent = state.title || "我的計劃本";
-      
-      // 1. 渲染頁籤
-      const tabsStrip = document.getElementById("tabsStrip");
-      tabsStrip.innerHTML = "";
-      state.tabs.forEach(tab => {
-        const span = document.createElement("span");
-        span.className = `tab ${state.activeTab === tab.id ? 'active' : ''}`;
-        span.textContent = tab.name;
-        span.onclick = () => {
-          state.activeTab = tab.id;
-          app.render();
-        };
-        tabsStrip.appendChild(span);
+      /* 清單標題 */
+      .list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .list-title {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--brown-dark);
+      }
+
+      .list-subtitle {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: 600;
+        margin-top: 2px;
+      }
+
+      .add-item-btn {
+        background-color: white;
+        border: 1.5px solid var(--border);
+        color: var(--brown);
+        padding: 8px 16px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 12px var(--shadow);
+        transition: all 0.2s;
+      }
+
+      .add-item-btn:hover {
+        background-color: var(--cream2);
+      }
+
+      /* 進度條 */
+      .progress-bar {
+        height: 6px;
+        background-color: var(--cream2);
+        border-radius: 3px;
+        margin-bottom: 24px;
+        overflow: hidden;
+        border: 0.5px solid var(--border);
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--pink) 0%, #f7b7c4 100%);
+        width: 0%;
+        transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+
+      /* 新增項目表單 */
+      .add-form {
+        display: none;
+        gap: 10px;
+        margin-bottom: 20px;
+        animation: slideDown 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+
+      .add-form.visible {
+        display: flex;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .add-form input {
+        flex: 1;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 12px 16px;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--text);
+        background-color: white;
+        outline: none;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+      }
+
+      .add-form input:focus {
+        border-color: var(--brown-light);
+      }
+
+      .confirm-btn {
+        background-color: var(--brown-dark);
+        color: white;
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 0 20px;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      /* 提示文字 */
+      .swipe-hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: right;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      /* 待辦事項項目 */
+      .todo-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .todo-item {
+        position: relative;
+        background-color: #ffcad4; /* 刪除背景色 */
+        border-radius: var(--radius);
+        overflow: hidden;
+        user-select: none;
+        box-shadow: 0 4px 14px var(--shadow);
+      }
+
+      .delete-bg {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 800;
+        font-size: 18px;
+        cursor: pointer;
+        z-index: 1;
+      }
+
+      .todo-inner {
+        position: relative;
+        background-color: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        z-index: 2;
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        cursor: grab;
+      }
+
+      .todo-inner:active {
+        cursor: grabbing;
+      }
+
+      .todo-item.done .todo-inner {
+        background-color: var(--cream2);
+        border-color: transparent;
+      }
+
+      .todo-item.done .todo-text {
+        color: var(--text-muted);
+        text-decoration: line-through;
+      }
+
+      /* 勾選按鈕與動畫 */
+      .check-btn {
+        width: 26px;
+        height: 26px;
+        border: 2px solid var(--border);
+        border-radius: 50%;
+        cursor: pointer;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: white;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+
+      .check-btn:hover {
+        border-color: var(--pink);
+        transform: scale(1.05);
+      }
+
+      .check-btn.done {
+        border-color: var(--green);
+        background-color: var(--green-light);
+      }
+
+      .checkmark {
+        display: none;
+        color: var(--green);
+        font-size: 14px;
+        font-weight: bold;
+      }
+
+      .check-btn.done .checkmark {
+        display: block;
+      }
+
+      .smile {
+        display: none;
+        font-size: 16px;
+        position: absolute;
+      }
+
+      .check-btn.smiling {
+        border-color: var(--pink);
+        background-color: var(--pink-light);
+        animation: pulse 0.4s ease;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+      }
+
+      .ring {
+        position: absolute;
+        inset: -4px;
+        border: 2px solid var(--green);
+        border-radius: 50%;
+        opacity: 0;
+        transform: scale(0.6);
+        pointer-events: none;
+      }
+
+      @keyframes ringPop {
+        0% { transform: scale(0.6); opacity: 1; }
+        100% { transform: scale(1.4); opacity: 0; }
+      }
+
+      .todo-text {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.4;
+        word-break: break-all;
+      }
+
+      /* 空白狀態 */
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+      }
+
+      .empty-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+
+      .empty-state p {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      /* 底部狀態欄 */
+      .footer-status {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px var(--shadow);
+        z-index: 100;
+      }
+      .sync-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--green);
+      }
+
+      /* 彈出視窗底層 */
+      .modal-bg {
+        position: fixed;
+        inset: 0;
+        background-color: rgba(91, 70, 56, 0.35);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease;
+        z-index: 1000;
+        padding: 20px;
+      }
+
+      .modal-bg.visible {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* 彈出視窗本體 */
+      .modal {
+        background-color: white;
+        border-radius: var(--radius);
+        padding: 24px;
+        width: 100%;
+        max-width: 360px;
+        box-shadow: 0 20px 40px rgba(91, 70, 56, 0.15);
+        transform: scale(0.92);
+        transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
+
+      .modal-bg.visible .modal {
+        transform: scale(1);
+      }
+
+      .modal h3 {
+        font-size: 18px;
+        font-weight: 800;
+        color: var(--brown-dark);
+        margin-bottom: 16px;
+      }
+
+      .modal .form-label {
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        display: block;
+      }
+
+      .modal input[type="text"],
+      .modal select {
+        width: 100%;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 12px;
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--text);
+        background-color: var(--cream);
+        outline: none;
+        margin-bottom: 16px;
+      }
+
+      .modal input[type="text"]:focus,
+      .modal select:focus {
+        border-color: var(--brown-light);
+        background-color: white;
+      }
+
+      /* 色票選擇器 */
+      .color-picker {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+
+      .color-swatch {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: 2px solid white;
+        box-shadow: 0 0 0 1.5px var(--border);
+        transition: transform 0.15s;
+      }
+
+      .color-swatch:hover {
+        transform: scale(1.1);
+      }
+
+      .color-swatch.selected {
+        box-shadow: 0 0 0 2px var(--brown-dark);
+        transform: scale(1.1);
+      }
+
+      .modal-btns {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .modal-btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+
+      .modal-btn.cancel {
+        background-color: var(--cream2);
+        color: var(--text);
+      }
+
+      .modal-btn.cancel:hover {
+        background-color: var(--cream3);
+      }
+
+      .modal-btn.confirm {
+        background-color: var(--brown-dark);
+        color: white;
+      }
+
+      .modal-btn.confirm:hover {
+        background-color: var(--brown);
+      }
+
+      /* 右鍵/長按快顯功能表 */
+      .ctx-menu {
+        position: fixed;
+        background-color: white;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        box-shadow: 0 10px 30px rgba(91, 70, 56, 0.12);
+        padding: 6px;
+        min-width: 150px;
+        z-index: 2000;
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.95);
+        transform-origin: top left;
+        transition:
+          opacity 0.15s,
+          transform 0.15s;
+      }
+
+      .ctx-menu.visible {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1);
+      }
+
+      .ctx-item {
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        cursor: pointer;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .ctx-item:hover {
+        background-color: var(--cream);
+      }
+
+      .ctx-item.danger {
+        color: #d32f2f;
+      }
+
+      .ctx-item.danger:hover {
+        background-color: #ffebee;
+      }
+
+      /* 紙屑特效元件 */
+      .confetti-piece {
+        position: fixed;
+        pointer-events: none;
+        z-index: 999;
+        top: 0;
+        left: 0;
+        animation: confettiFall linear forwards;
+      }
+
+      @keyframes confettiFall {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(120px) rotate(350deg);
+          opacity: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div id="loginScreen">
+      <div class="login-card">
+        <h1>✨ 計劃本協作</h1>
+        <center><div id="statusBadge" class="status-badge status-offline">🔴 雲端載入中...</div></center>
+
+        <div class="form-group">
+          <label>你的名字</label>
+          <input type="text" id="nicknameInput" placeholder="例：小美" maxlength="20" />
+        </div>
+
+        <div class="form-group">
+          <label>房間代碼（留空建立新房間）</label>
+          <input type="text" id="roomCodeInput" placeholder="例：ABC12345" maxlength="8" />
+        </div>
+
+        <div class="login-buttons">
+          <button class="btn-primary" onclick="app.createRoom()">建立新房間</button>
+          <button class="btn-secondary" onclick="app.joinRoom()">加入房間</button>
+        </div>
+
+        <div id="roomCodeSection" class="room-code-section" style="display: none;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">📌 新房間建立成功！代碼為：</div>
+          <div class="room-code" id="displayRoomCode"></div>
+          <button class="copy-btn" onclick="app.copyRoomCode()">📋 複製代碼並進入</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="appScreen">
+      <div class="topbar">
+        <div class="topbar-left">
+          <span class="topbar-title" id="topbarTitleText" contenteditable="true">我的計劃本</span>
+          <div class="online-badge">
+            <div class="online-dot"></div>
+            <span id="userCount">1 人在線</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="add-item-btn" onclick="app.showRoomInfo()">📍 房間資訊</button>
+          <button class="add-item-btn" style="border-color:#d32f2f; color:#d32f2f;" onclick="window.location.reload()">🚪 離開</button>
+        </div>
+      </div>
+
+      <div class="tabs-container">
+        <div class="tabs-wrap" id="tabsWrap">
+          <button class="add-tab-btn" id="addTabBtn">＋</button>
+        </div>
+      </div>
+
+      <main class="main-content" id="mainContent">
+        </main>
+
+      <div class="footer-status">
+        <div class="sync-dot" id="syncDot"></div>
+        <span id="syncText">已同步</span>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="tabModal">
+      <div class="modal">
+        <h3 id="modalTitle">新增分頁</h3>
+        <label class="form-label">分頁名稱</label>
+        <input type="text" id="tabNameInput" placeholder="輸入分頁名稱…" maxlength="15" />
+
+        <label class="form-label">選擇標籤顏色</label>
+        <div class="color-picker" id="colorPicker"></div>
+
+        <label class="form-label">所屬資料夾</label>
+        <select id="folderSelect">
+          <option value="">不加入資料夾</option>
+        </select>
+
+        <div class="modal-btns">
+          <button class="modal-btn cancel" id="modalCancel">取消</button>
+          <button class="modal-btn confirm" id="modalConfirm">確定</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="folderModal">
+      <div class="modal">
+        <h3 id="folderModalTitle">新增資料夾</h3>
+        <label class="form-label">資料夾名稱</label>
+        <input type="text" id="folderNameInput" placeholder="輸入資料夾名稱…" maxlength="12" />
+        <div class="modal-btns">
+          <button class="modal-btn cancel" id="folderCancel">取消</button>
+          <button class="modal-btn confirm" id="folderConfirm">確定</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="moveModal">
+      <div class="modal">
+        <h3>移動分頁</h3>
+        <label class="form-label">選擇目標資料夾</label>
+        <select id="moveFolderSelect"></select>
+        <div class="modal-btns">
+          <button class="modal-btn cancel" id="moveCancelBtn">取消</button>
+          <button class="modal-btn confirm" id="moveConfirmBtn">確定</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="roomInfoModal" class="modal-bg">
+      <div class="modal">
+        <h3>📍 房間資訊</h3>
+        <div style="margin-bottom: 16px; margin-top:12px;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">房間代碼</div>
+          <div style="font-size: 18px; font-weight: 800; font-family: monospace; letter-spacing: 2px;" id="modalRoomCode"></div>
+        </div>
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">目前成員</div>
+          <div style="font-size: 14px; font-weight: 600; color: var(--brown);" id="modalUserCount"></div>
+        </div>
+        <button class="modal-btn confirm" style="width:100%" onclick="document.getElementById('roomInfoModal').classList.remove('visible')">關閉</button>
+      </div>
+    </div>
+
+    <div class="ctx-menu" id="ctxMenu">
+      <div class="ctx-item" id="ctxRename">✏️ 重新命名 / 換色</div>
+      <div class="ctx-item" id="ctxMove">📁 移動至資料夾</div>
+      <div class="ctx-item danger" id="ctxDelete">🗑️ 刪除分頁</div>
+    </div>
+
+    <div class="ctx-menu" id="folderCtxMenu">
+      <div class="ctx-item" id="ctxFolderRename">✏️ 重新命名</div>
+      <div class="ctx-item danger" id="ctxFolderDelete">🗑️ 刪除資料夾</div>
+    </div>
+
+    <script>
+      // ===================== FIREBASE 連線設定 =====================
+      const firebaseConfig = {
+        apiKey: "AIzaSyBO3BaSLWDB1DA6znk6kdo7MTN5kW56AWQ",
+        authDomain: "my-travel-planner-3c04a.firebaseapp.com",
+        databaseURL: "https://my-travel-planner-3c04a-default-rtdb.firebaseio.com",
+        projectId: "my-travel-planner-3c04a",
+        storageBucket: "my-travel-planner-3c04a.firebasestorage.app",
+        messagingSenderId: "1061443894751",
+        appId: "1:1061443894751:web:9117b1071228fffe05186a",
+        measurementId: "G-8DWEG0DFPZ"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      let roomId = "";
+      let nickname = "";
+      let roomRef = null;
+      let isIncomingRemoteUpdate = false;
+
+      // 監測 Firebase 的連線狀態更新登入面板狀態
+      db.ref(".info/connected").on("value", (snap) => {
+        const badge = document.getElementById("statusBadge");
+        if (snap.val() === true) {
+          badge.textContent = "🟢 雲端已就緒";
+          badge.className = "status-badge status-online";
+        } else {
+          badge.textContent = "🔴 離線";
+          badge.className = "status-badge status-offline";
+        }
       });
-      
-      const addBtn = document.createElement("span");
-      addBtn.className = "tab-add";
-      addBtn.textContent = "＋";
-      addBtn.onclick = () => {
-        const name = prompt("請輸入新分頁名稱：");
-        if (name) {
-          const newId = "t_" + Date.now();
-          state.tabs.push({ id: newId, name: name });
-          state.activeTab = newId;
-          app.render();
-          app.save();
+
+      // ===================== STATE (狀態管理與預設資料) =====================
+      let state = {
+        title: "我的計劃本",
+        folders: [
+          { id: "f1", name: "生活" },
+          { id: "f2", name: "工作" },
+        ],
+        tabs: [
+          {
+            id: "t1",
+            name: "今日待辦",
+            color: "#F2A7B8",
+            folderId: "f1",
+            items: [
+              { id: "i1", text: "喝 8 杯水 💧", done: false },
+              { id: "i2", text: "讀書 30 分鐘 📖", done: false },
+              { id: "i3", text: "整理房間 🧹", done: true },
+            ],
+          },
+          {
+            id: "t2",
+            name: "購物清單",
+            color: "#7BC8A4",
+            folderId: "f1",
+            items: [
+              { id: "i4", text: "牛奶", done: false },
+              { id: "i5", text: "蔬菜沙拉材料", done: false },
+            ],
+          },
+          {
+            id: "t3",
+            name: "工作任務",
+            color: "#A7C4E8",
+            folderId: "f2",
+            items: [
+              { id: "i6", text: "完成週報", done: false },
+              { id: "i7", text: "回覆 Email", done: true },
+            ],
+          },
+        ],
+        activeTab: "t1",
+        nextId: 100,
+      };
+
+      const TAB_COLORS = [
+        "#F2A7B8",
+        "#7BC8A4",
+        "#F7D98C",
+        "#A7C4E8",
+        "#C4A8E8",
+        "#F2C4A8",
+        "#A8E8D4",
+        "#E8A7C4",
+      ];
+
+      // ===================== 封裝登入按鈕介面，防範加載 null 錯誤 =====================
+      const app = {
+        generateRoomCode() {
+          return Math.random().toString(36).substring(2, 10).toUpperCase();
+        },
+        createRoom() {
+          nickname = document.getElementById("nicknameInput").value.trim() || "匿名小幫手";
+          const code = this.generateRoomCode();
+          document.getElementById("displayRoomCode").textContent = code;
+          document.getElementById("roomCodeSection").style.display = "block";
+          document.getElementById("roomCodeInput").value = code;
+        },
+        joinRoom() {
+          nickname = document.getElementById("nicknameInput").value.trim() || "匿名小幫手";
+          roomId = document.getElementById("roomCodeInput").value.trim().toUpperCase();
+          if (!roomId) {
+            alert("請輸入房間代碼，或點擊建立新房間！");
+            return;
+          }
+          roomRef = db.ref("rooms/" + roomId);
+          initFirebaseSync();
+        },
+        copyRoomCode() {
+          const code = document.getElementById("displayRoomCode").textContent;
+          navigator.clipboard.writeText(code).then(() => {
+            alert("代碼已複製！即將自動進入房間...");
+            this.joinRoom();
+          });
+        },
+        showRoomInfo() {
+          document.getElementById("modalRoomCode").textContent = roomId;
+          db.ref(`rooms/${roomId}/users`).once("value", (snap) => {
+            const users = Object.keys(snap.val() || {}).join(", ") || nickname;
+            document.getElementById("modalUserCount").textContent = users;
+            document.getElementById("roomInfoModal").classList.add("visible");
+          });
         }
       };
-      tabsStrip.appendChild(addBtn);
 
-      // 2. 渲染待辦事項
-      const tabContent = document.getElementById("tabContent");
-      tabContent.innerHTML = "";
-      
-      const currentTodos = state.todos.filter(t => t.tabId === state.activeTab);
-      
-      if (currentTodos.length === 0) {
-        tabContent.innerHTML = `<div class="empty-state">🌸 還沒有任何項目，快去新增吧！</div>`;
-        return;
+      // ===================== SAVE/LOAD (雲端同步整合版) =====================
+      function saveState() {
+        try {
+          localStorage.setItem("plannerState_" + roomId, JSON.stringify(state));
+          if (!isIncomingRemoteUpdate && roomRef) {
+            document.getElementById("syncDot").style.background = "var(--yellow)";
+            document.getElementById("syncText").textContent = "同步中...";
+            roomRef.set(state).then(() => {
+              document.getElementById("syncDot").style.background = "var(--green)";
+              document.getElementById("syncText").textContent = "已同步";
+            });
+          }
+        } catch (e) {}
       }
 
-      currentTodos.forEach(item => {
-        const div = document.createElement("div");
-        div.className = `todo-item ${item.done ? 'done' : ''}`;
-        div.innerHTML = `
-          <div class="todo-left">
-            <div class="todo-checkbox ${item.done ? 'done' : ''}" onclick="app.toggleTodo('${item.id}')">
-              ${item.done ? '✓' : ''}
+      function loadState() {
+        try {
+          const s = localStorage.getItem("plannerState_" + roomId);
+          if (s) {
+            state = JSON.parse(s);
+            if (!state.title) state.title = "我的計劃本";
+          }
+        } catch (e) {}
+      }
+
+      function initFirebaseSync() {
+        roomRef.on("value", (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            isIncomingRemoteUpdate = true;
+            state = data;
+            if (!state.activeTab && state.tabs && state.tabs.length) {
+              state.activeTab = state.tabs[0].id;
+            }
+            render();
+            isIncomingRemoteUpdate = false;
+          } else {
+            loadState();
+            saveState();
+            render();
+          }
+          // 切換介面
+          document.getElementById("loginScreen").style.display = "none";
+          document.getElementById("appScreen").style.display = "block";
+        });
+
+        // 在線人數追蹤
+        const userRef = db.ref(`rooms/${roomId}/users/${nickname}`);
+        userRef.set(true);
+        userRef.onDisconnect().remove();
+
+        db.ref(`rooms/${roomId}/users`).on("value", (snap) => {
+          const count = snap.numChildren() || 1;
+          document.getElementById("userCount").textContent = `${count} 人在線`;
+        });
+      }
+
+      // ===================== RENDER (畫面渲染) =====================
+      function render() {
+        const titleEl = document.getElementById("topbarTitleText");
+        if (document.activeElement !== titleEl) {
+          titleEl.textContent = state.title || "我的計劃本";
+        }
+
+        renderTabs();
+        renderPages();
+        saveState();
+      }
+
+      function renderTabs() {
+        const wrap = document.getElementById("tabsWrap");
+        const addBtn = document.getElementById("addTabBtn");
+
+        wrap.querySelectorAll(".tab, .tab-group").forEach((el) => el.remove());
+
+        const grouped = {};
+        const ungrouped = [];
+        state.tabs.forEach((tab) => {
+          if (tab.folderId) {
+            if (!grouped[tab.folderId]) grouped[tab.folderId] = [];
+            grouped[tab.folderId].push(tab);
+          } else {
+            ungrouped.push(tab);
+          }
+        });
+
+        ungrouped.forEach((tab) => {
+          const el = makeTabEl(tab);
+          wrap.insertBefore(el, addBtn);
+        });
+
+        state.folders.forEach((folder) => {
+          const tabs = grouped[folder.id] || [];
+
+          const group = document.createElement("div");
+          group.className = "tab-group";
+          group.setAttribute("data-folder", folder.id);
+
+          group.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            group.classList.add("dragover");
+          });
+          group.addEventListener("dragleave", () => {
+            group.classList.remove("dragover");
+          });
+          group.addEventListener("drop", (e) => {
+            e.preventDefault();
+            group.classList.remove("dragover");
+            const tabId = e.dataTransfer.getData("text/plain");
+            const folderId = group.getAttribute("data-folder");
+
+            const targetTab = state.tabs.find((t) => t.id === tabId);
+            if (targetTab) {
+              targetTab.folderId = folderId;
+              render();
+            }
+          });
+
+          const fLabel = document.createElement("span");
+          fLabel.className = "folder-icon";
+          fLabel.textContent = `📁 ${folder.name}`;
+          fLabel.title = "按右鍵/長按管理資料夾";
+
+          fLabel.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showFolderCtxMenu(e, folder.id);
+          });
+
+          let fTimer;
+          fLabel.addEventListener("touchstart", () => {
+            fTimer = setTimeout(() => showFolderCtxMenu(null, folder.id, fLabel), 600);
+          }, { passive: true });
+          fLabel.addEventListener("touchend", () => clearTimeout(fTimer), { passive: true });
+          fLabel.addEventListener("touchmove", () => clearTimeout(fTimer), { passive: true });
+
+          group.appendChild(fLabel);
+
+          tabs.forEach((tab) => {
+            const el = makeTabEl(tab);
+            group.appendChild(el);
+          });
+          wrap.insertBefore(group, addBtn);
+        });
+      }
+
+      function makeTabEl(tab) {
+        const el = document.createElement("div");
+        el.className = "tab" + (state.activeTab === tab.id ? " active" : "");
+        el.setAttribute("data-tabid", tab.id);
+        el.innerHTML = `<span class="tab-color-dot" style="background:${tab.color}"></span>${tab.name}`;
+
+        el.setAttribute("draggable", "true");
+        el.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", tab.id);
+          el.classList.add("dragging");
+        });
+        el.addEventListener("dragend", () => {
+          el.classList.remove("dragging");
+          document.querySelectorAll(".tab-group").forEach((g) => g.classList.remove("dragover"));
+        });
+
+        el.addEventListener("click", () => {
+          state.activeTab = tab.id;
+          render();
+        });
+        el.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          showCtxMenu(e, tab.id);
+        });
+
+        let pressTimer;
+        el.addEventListener("touchstart", () => {
+          pressTimer = setTimeout(() => showCtxMenu(null, tab.id, el), 600);
+        }, { passive: true });
+        el.addEventListener("touchend", () => clearTimeout(pressTimer), { passive: true });
+        el.addEventListener("touchmove", () => clearTimeout(pressTimer), { passive: true });
+
+        return el;
+      }
+
+      function renderPages() {
+        const main = document.getElementById("mainContent");
+        main.innerHTML = "";
+        state.tabs.forEach((tab) => {
+          const page = document.createElement("div");
+          page.className = "page" + (state.activeTab === tab.id ? " active" : "");
+          page.setAttribute("data-page", tab.id);
+          page.innerHTML = buildPageHTML(tab);
+          main.appendChild(page);
+          attachPageEvents(page, tab);
+        });
+      }
+
+      function buildPageHTML(tab) {
+        const done = tab.items ? tab.items.filter((i) => i.done).length : 0;
+        const total = tab.items ? tab.items.length : 0;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const folderName = tab.folderId ? (state.folders.find((f) => f.id === tab.folderId) || {}).name : null;
+
+        return `
+          <div class="list-header">
+            <div>
+              ${folderName ? `<div style="font-size:11px;color:var(--text-muted);font-weight:700;margin-bottom:2px;">📁 ${folderName}</div>` : ""}
+              <div class="list-title">${tab.name}</div>
+              <div class="list-subtitle">${total ? `${done}/${total} 完成 · ${pct}%` : "還沒有任何項目"}</div>
             </div>
-            <div class="todo-text">${item.text}</div>
+            <button class="add-item-btn" data-additem="${tab.id}">＋ 新增</button>
           </div>
-          <button class="todo-delete" onclick="app.deleteTodo('${item.id}')">🗑️</button>
+          ${total ? `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>` : ""}
+          <div class="add-form" id="addForm_${tab.id}">
+            <input type="text" placeholder="輸入內容…" id="addInput_${tab.id}" maxlength="60" />
+            <button class="confirm-btn" data-confirmitem="${tab.id}">加入</button>
+          </div>
+          ${total ? `<div class="swipe-hint">← 左滑項目露出垃圾桶點擊刪除</div>` : ""}
+          <div class="todo-list" id="list_${tab.id}">
+            ${total ? tab.items.map((item) => buildItemHTML(item)).join("") : ""}
+          </div>
+          ${total === 0 ? `<div class="empty-state"><div class="empty-icon">🌸</div><p>加入第一個計劃吧！</p></div>` : ""}
         `;
-        tabContent.appendChild(div);
-      });
-    },
-
-    addTodo() {
-      const input = document.getElementById("todoInput");
-      const text = input.value.trim();
-      if (!text) return;
-
-      state.todos.push({
-        id: "i_" + Date.now(),
-        tabId: state.activeTab,
-        text: text,
-        done: false
-      });
-      input.value = "";
-      this.render();
-      this.save();
-    },
-
-    toggleTodo(id) {
-      const item = state.todos.find(t => t.id === id);
-      if (item) {
-        item.done = !item.done;
-        this.render();
-        this.save();
       }
-    },
 
-    deleteTodo(id) {
-      state.todos = state.todos.filter(t => t.id !== id);
-      this.render();
-      this.save();
-    },
-
-    showRoomInfo() {
-      document.getElementById("modalRoomCode").textContent = roomId;
-      db.ref(`rooms/${roomId}/users`).once("value", (snap) => {
-        const users = Object.keys(snap.val() || {}).join(", ") || nickname;
-        document.getElementById("modalUserCount").textContent = users;
-        document.getElementById("roomInfoModal").classList.add("visible");
-      });
-    },
-
-    leaveRoom() {
-      if (confirm("確定要離開房間嗎？")) {
-        window.location.reload();
+      function buildItemHTML(item) {
+        return `
+          <div class="todo-item${item.done ? " done" : ""}" data-item="${item.id}">
+            <div class="delete-bg">🗑️</div>
+            <div class="todo-inner">
+              <div class="check-btn${item.done ? " done" : ""}" data-check="${item.id}">
+                <span class="smile">😊</span>
+                <span class="checkmark">✓</span>
+                <div class="ring"></div>
+              </div>
+              <div class="todo-text">${escHtml(item.text)}</div>
+            </div>
+          </div>
+        `;
       }
-    }
-  };
 
-  // 監聽標題修改
-  document.getElementById("appTitle").addEventListener("blur", () => {
-    state.title = document.getElementById("appTitle").textContent.trim() || "我的計劃本";
-    app.save();
-  });
-</script>
+      function attachPageEvents(page, tab) {
+        if (page.querySelector(`[data-additem="${tab.id}"]`))
+          page.querySelector(`[data-additem="${tab.id}"]`).addEventListener("click", () => toggleAddForm(tab.id));
 
-</body>
+        if (page.querySelector(`[data-confirmitem="${tab.id}"]`))
+          page.querySelector(`[data-confirmitem="${tab.id}"]`).addEventListener("click", () => addItem(tab.id));
+
+        const input = page.querySelector(`#addInput_${tab.id}`);
+        if (input)
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") addItem(tab.id);
+          });
+
+        attachItemEvents(page, tab);
+      }
+
+      function attachItemEvents(page, tab) {
+        page.querySelectorAll(".check-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleItem(btn.getAttribute("data-check"), tab.id, btn);
+          });
+        });
+
+        page.querySelectorAll(".delete-bg").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const itemId = btn.closest(".todo-item").getAttribute("data-item");
+            deleteItem(itemId, tab.id);
+          });
+        });
+
+        page.querySelectorAll(".todo-item").forEach((el) => {
+          attachSwipe(el, tab.id);
+        });
+      }
+
+      // ===================== SWIPE TO DELETE (左滑刪除) =====================
+      function attachSwipe(el, tabId) {
+        const inner = el.querySelector(".todo-inner");
+        let startX = 0, curX = 0, dragging = false, revealed = false;
+
+        function onStart(x) {
+          startX = x;
+          curX = x;
+          dragging = true;
+        }
+        function onMove(x) {
+          if (!dragging) return;
+          curX = x;
+          let dx = curX - startX;
+          if (revealed) dx -= 80;
+
+          const finalX = Math.max(-100, Math.min(0, dx));
+          inner.style.transition = "none";
+          inner.style.transform = `translateX(${finalX}px)`;
+        }
+        function onEnd() {
+          if (!dragging) return;
+          dragging = false;
+          inner.style.transition = "transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+
+          const dx = curX - startX;
+          if (dx < -40) {
+            inner.style.transform = "translateX(-80px)";
+            revealed = true;
+          } else {
+            inner.style.transform = "translateX(0)";
+            revealed = false;
+          }
+        }
+
+        el.addEventListener("touchstart", (e) => onStart(e.touches[0].clientX), { passive: true });
+        el.addEventListener("touchmove", (e) => { if (dragging) onMove(e.touches[0].clientX); }, { passive: true });
+        el.addEventListener("touchend", () => onEnd());
+
+        inner.addEventListener("mousedown", (e) => { if (e.button === 0) onStart(e.clientX); });
+        window.addEventListener("mousemove", (e) => { if (dragging) onMove(e.clientX); });
+        window.addEventListener("mouseup", () => onEnd());
+
+        inner.addEventListener("click", (e) => {
+          if (revealed) {
+            e.preventDefault();
+            e.stopPropagation();
+            inner.style.transform = "translateX(0)";
+            revealed = false;
+          }
+        }, { capture: true });
+      }
+
+      // ===================== ACTIONS (按鈕事件) =====================
+      function toggleAddForm(tabId) {
+        const form = document.getElementById(`addForm_${tabId}`);
+        if (!form) return;
+        const visible = form.classList.toggle("visible");
+        if (visible) {
+          const input = document.getElementById(`addInput_${tabId}`);
+          if (input) setTimeout(() => input.focus(), 50);
+        }
+      }
+
+      function addItem(tabId) {
+        const input = document.getElementById(`addInput_${tabId}`);
+        if (!input || !input.value.trim()) return;
+        const text = input.value.trim();
+        const tab = state.tabs.find((t) => t.id === tabId);
+        if (!tab) return;
+        if (!tab.items) tab.items = [];
+        tab.items.push({ id: "i" + ++state.nextId, text, done: false });
+        input.value = "";
+        render();
+      }
+
+      function toggleItem(itemId, tabId, btnEl) {
+        const tab = state.tabs.find((t) => t.id === tabId);
+        if (!tab) return;
+        const item = tab.items.find((i) => i.id === itemId);
+        if (!item) return;
+
+        if (!item.done) {
+          btnEl.classList.add("smiling");
+          btnEl.querySelector(".smile").style.display = "block";
+          setTimeout(() => {
+            btnEl.classList.remove("smiling");
+            btnEl.querySelector(".smile").style.display = "none";
+            item.done = true;
+            btnEl.classList.add("done");
+            btnEl.querySelector(".checkmark").style.display = "block";
+            btnEl.querySelector(".ring").style.animation = "ringPop 0.5s ease-out forwards";
+
+            const itemEl = btnEl.closest(".todo-item");
+            if (itemEl) itemEl.classList.add("done");
+            spawnConfetti(btnEl.getBoundingClientRect());
+            updateProgress(tabId);
+            saveState();
+          }, 600);
+        } else {
+          item.done = false;
+          btnEl.classList.remove("done");
+          btnEl.querySelector(".checkmark").style.display = "none";
+          btnEl.querySelector(".ring").style.animation = "none";
+          const itemEl = btnEl.closest(".todo-item");
+          if (itemEl) itemEl.classList.remove("done");
+          updateProgress(tabId);
+          saveState();
+        }
+      }
+
+      function updateProgress(tabId) {
+        const tab = state.tabs.find((t) => t.id === tabId);
+        if (!tab) return;
+        const done = tab.items ? tab.items.filter((i) => i.done).length : 0;
+        const total = tab.items ? tab.items.length : 0;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+        const fill = document.querySelector(`[data-page="${tabId}"] .progress-fill`);
+        if (fill) fill.style.width = pct + "%";
+        const subtitle = document.querySelector(`[data-page="${tabId}"] .list-subtitle`);
+        if (subtitle) subtitle.textContent = `${done}/${total} 完成 · ${pct}%`;
+      }
+
+      function deleteItem(itemId, tabId) {
+        const tab = state.tabs.find((t) => t.id === tabId);
+        if (!tab) return;
+        tab.items = tab.items.filter((i) => i.id !== itemId);
+        render();
+      }
+
+      function spawnConfetti(rect) {
+        const colors = ["#F2A7B8", "#7BC8A4", "#F7D98C", "#A7C4E8", "#C4A8E8"];
+        for (let i = 0; i < 10; i++) {
+          const el = document.createElement("div");
+          el.className = "confetti-piece";
+          el.style.cssText = `
+            left: ${rect.left + rect.width / 2 + (Math.random() - 0.5) * 60}px;
+            top: ${rect.top}px;
+            background: ${colors[Math.floor(Math.random() * colors.length)]};
+            border-radius: ${Math.random() > 0.5 ? "50%" : "2px"};
+            width: ${6 + Math.random() * 6}px;
+            height: ${6 + Math.random() * 6}px;
+            animation-delay: ${Math.random() * 0.3}s;
+            animation-duration: ${0.8 + Math.random() * 0.6}s;
+          `;
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 1500);
+        }
+      }
+
+      // ===================== CONTEXT MENU (右鍵/長按選單) =====================
+      let ctxTabId = null;
+      let ctxFolderId = null;
+
+      function showCtxMenu(e, tabId, fromEl) {
+        ctxTabId = tabId;
+        const menu = document.getElementById("ctxMenu");
+        menu.classList.add("visible");
+        if (e) {
+          let x = e.clientX, y = e.clientY;
+          if (x + 160 > window.innerWidth) x = window.innerWidth - 165;
+          if (y + 140 > window.innerHeight) y = window.innerHeight - 145;
+          menu.style.left = x + "px";
+          menu.style.top = y + "px";
+        } else if (fromEl) {
+          const r = fromEl.getBoundingClientRect();
+          menu.style.left = r.left + "px";
+          menu.style.top = r.bottom + 4 + "px";
+        }
+      }
+
+      function showFolderCtxMenu(e, folderId, fromEl) {
+        ctxFolderId = folderId;
+        const menu = document.getElementById("folderCtxMenu");
+        menu.classList.add("visible");
+        if (e) {
+          let x = e.clientX, y = e.clientY;
+          if (x + 160 > window.innerWidth) x = window.innerWidth - 165;
+          if (y + 140 > window.innerHeight) y = window.innerHeight - 145;
+          menu.style.left = x + "px";
+          menu.style.top = y + "px";
+        } else if (fromEl) {
+          const r = fromEl.getBoundingClientRect();
+          menu.style.left = r.left + "px";
+          menu.style.top = r.bottom + 4 + "px";
+        }
+      }
+
+      function hideCtxMenu() {
+        document.getElementById("ctxMenu").classList.remove("visible");
+        document.getElementById("folderCtxMenu").classList.remove("visible");
+      }
+
+      document.getElementById("ctxDelete").addEventListener("click", () => {
+        if (!ctxTabId) return;
+        state.tabs = state.tabs.filter((t) => t.id !== ctxTabId);
+        if (state.activeTab === ctxTabId) state.activeTab = state.tabs[0]?.id || null;
+        hideCtxMenu();
+        render();
+      });
+
+      document.getElementById("ctxRename").addEventListener("click", () => {
+        if (!ctxTabId) return;
+        const tab = state.tabs.find((t) => t.id === ctxTabId);
+        if (!tab) return;
+        hideCtxMenu();
+        openTabModal(tab);
+      });
+
+      document.getElementById("ctxMove").addEventListener("click", () => {
+        if (!ctxTabId) return;
+        hideCtxMenu();
+        openMoveModal(ctxTabId);
+      });
+
+      document.getElementById("ctxFolderRename").addEventListener("click", () => {
+        if (!ctxFolderId) return;
+        const folder = state.folders.find((f) => f.id === ctxFolderId);
+        if (!folder) return;
+        hideCtxMenu();
+
+        editingFolderId = folder.id;
+        document.getElementById("folderModalTitle").textContent = "編輯資料夾";
+        document.getElementById("folderNameInput").value = folder.name;
+        document.getElementById("folderModal").classList.add("visible");
+        setTimeout(() => document.getElementById("folderNameInput").focus(), 100);
+      });
+
+      document.getElementById("ctxFolderDelete").addEventListener("click", () => {
+        if (!ctxFolderId) return;
+        const folder = state.folders.find((f) => f.id === ctxFolderId);
+        if (!folder) return;
+        hideCtxMenu();
+
+        if (confirm(`確定要刪除「${folder.name}」資料夾嗎？\n（資料夾內的分頁將自動移至外層，計畫內容不會遺失喔！）`)) {
+          state.folders = state.folders.filter((f) => f.id !== ctxFolderId);
+          state.tabs.forEach((tab) => {
+            if (tab.folderId === ctxFolderId) tab.folderId = null;
+          });
+          render();
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".ctx-menu")) hideCtxMenu();
+      });
+
+      // ===================== MODAL WINDOWS (彈出視窗) =====================
+      let editingTabId = null;
+      let editingFolderId = null;
+      let selectedColor = TAB_COLORS[0];
+
+      function openTabModal(existingTab) {
+        editingTabId = existingTab ? existingTab.id : null;
+        selectedColor = existingTab ? existingTab.color : TAB_COLORS[0];
+
+        document.getElementById("modalTitle").textContent = existingTab ? "編輯分頁" : "新增分頁";
+        document.getElementById("tabNameInput").value = existingTab ? existingTab.name : "";
+
+        const cp = document.getElementById("colorPicker");
+        cp.innerHTML = "";
+        TAB_COLORS.forEach((c) => {
+          const sw = document.createElement("div");
+          sw.className = "color-swatch" + (c === selectedColor ? " selected" : "");
+          sw.style.background = c;
+          sw.addEventListener("click", () => {
+            selectedColor = c;
+            cp.querySelectorAll(".color-swatch").forEach((s) => s.classList.remove("selected"));
+            sw.classList.add("selected");
+          });
+          cp.appendChild(sw);
+        });
+
+        const fs = document.getElementById("folderSelect");
+        fs.innerHTML = '<option value="">不加入資料夾</option>';
+        state.folders.forEach((f) => {
+          const opt = document.createElement("option");
+          opt.value = f.id;
+          opt.textContent = f.name;
+          if (existingTab && existingTab.folderId === f.id) opt.selected = true;
+          fs.appendChild(opt);
+        });
+
+        const newOpt = document.createElement("option");
+        newOpt.value = "__new__";
+        newOpt.textContent = "＋ 新增資料夾…";
+        fs.appendChild(newOpt);
+
+        // 使用有名稱的函式，方便解綁，避免重覆觸發事件開關
+        function onFolderSelectChange() {
+          if (fs.value === "__new__") {
+            fs.removeEventListener("change", onFolderSelectChange);
+            hideTabModal();
+            openFolderModal(() => { openTabModal(existingTab); });
+          }
+        }
+        fs.addEventListener("change", onFolderSelectChange);
+
+        document.getElementById("tabModal").classList.add("visible");
+        setTimeout(() => document.getElementById("tabNameInput").focus(), 100);
+      }
+
+      function hideTabModal() {
+        document.getElementById("tabModal").classList.remove("visible");
+      }
+
+      document.getElementById("addTabBtn").addEventListener("click", () => openTabModal(null));
+      document.getElementById("modalCancel").addEventListener("click", hideTabModal);
+
+      document.getElementById("modalConfirm").addEventListener("click", () => {
+        const name = document.getElementById("tabNameInput").value.trim();
+        if (!name) {
+          document.getElementById("tabNameInput").focus();
+          return;
+        }
+        const folderId = document.getElementById("folderSelect").value || null;
+
+        if (editingTabId) {
+          const tab = state.tabs.find((t) => t.id === editingTabId);
+          if (tab) {
+            tab.name = name;
+            tab.color = selectedColor;
+            tab.folderId = folderId === "__new__" ? null : folderId;
+          }
+        } else {
+          state.tabs.push({
+            id: "t" + ++state.nextId,
+            name,
+            color: selectedColor,
+            folderId: folderId === "__new__" ? null : folderId,
+            items: [],
+          });
+          state.activeTab = state.tabs[state.tabs.length - 1].id;
+        }
+        hideTabModal();
+        render();
+      });
+
+      document.getElementById("tabNameInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("modalConfirm").click();
+      });
+
+      let folderCallback = null;
+      function openFolderModal(cb) {
+        folderCallback = cb;
+        editingFolderId = null;
+        document.getElementById("folderModalTitle").textContent = "新增資料夾";
+        document.getElementById("folderNameInput").value = "";
+        document.getElementById("folderModal").classList.add("visible");
+        setTimeout(() => document.getElementById("folderNameInput").focus(), 100);
+      }
+
+      document.getElementById("folderCancel").addEventListener("click", () => {
+        document.getElementById("folderModal").classList.remove("visible");
+        editingFolderId = null;
+        if (folderCallback) {
+          folderCallback();
+          folderCallback = null;
+        }
+      });
+
+      document.getElementById("folderConfirm").addEventListener("click", () => {
+        const name = document.getElementById("folderNameInput").value.trim();
+        if (!name) {
+          document.getElementById("folderNameInput").focus();
+          return;
+        }
+
+        if (editingFolderId) {
+          const folder = state.folders.find((f) => f.id === editingFolderId);
+          if (folder) folder.name = name;
+          editingFolderId = null;
+        } else {
+          const id = "f" + ++state.nextId;
+          state.folders.push({ id, name });
+
+          if (folderCallback) {
+            document.getElementById("folderModal").classList.remove("visible");
+            folderCallback();
+            setTimeout(() => {
+              const fs = document.getElementById("folderSelect");
+              if (fs) {
+                const opt = document.createElement("option");
+                opt.value = id;
+                opt.textContent = name;
+                opt.selected = true;
+                const newOpt = Array.from(fs.options).find((o) => o.value === "__new__");
+                fs.insertBefore(opt, newOpt);
+                fs.value = id;
+              }
+            }, 50);
+            folderCallback = null;
+            return;
+          }
+        }
+
+        document.getElementById("folderModal").classList.remove("visible");
+        render();
+      });
+
+      document.getElementById("folderNameInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") document.getElementById("folderConfirm").click();
+      });
+
+      let moveTabId = null;
+      function openMoveModal(tabId) {
+        moveTabId = tabId;
+        const tab = state.tabs.find((t) => t.id === tabId);
+        const sel = document.getElementById("moveFolderSelect");
+        sel.innerHTML = '<option value="">不加入資料夾</option>';
+        state.folders.forEach((f) => {
+          const opt = document.createElement("option");
+          opt.value = f.id;
+          opt.textContent = f.name;
+          if (tab && tab.folderId === f.id) opt.selected = true;
+          sel.appendChild(opt);
+        });
+        document.getElementById("moveModal").classList.add("visible");
+      }
+
+      document.getElementById("moveCancelBtn").addEventListener("click", () => {
+        document.getElementById("moveModal").classList.remove("visible");
+      });
+
+      document.getElementById("moveConfirmBtn").addEventListener("click", () => {
+        const folderId = document.getElementById("moveFolderSelect").value || null;
+        const tab = state.tabs.find((t) => t.id === moveTabId);
+        if (tab) tab.folderId = folderId;
+        document.getElementById("moveModal").classList.remove("visible");
+        render();
+      });
+
+      document.querySelectorAll(".modal-bg").forEach((bg) => {
+        bg.addEventListener("click", (e) => {
+          if (e.target === bg) {
+            bg.classList.remove("visible");
+            editingFolderId = null;
+          }
+        });
+      });
+
+      // ===================== HELPERS =====================
+      function escHtml(str) {
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      // ===================== INITIALIZATION (事件綁定) =====================
+      const titleTextEl = document.getElementById("topbarTitleText");
+      titleTextEl.addEventListener("blur", () => {
+        const newTitle = titleTextEl.textContent.trim();
+        state.title = newTitle || "我的計劃本";
+        saveState();
+      });
+
+      titleTextEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          titleTextEl.blur();
+        }
+      });
+
+      const tabsWrapEl = document.getElementById("tabsWrap");
+      tabsWrapEl.addEventListener("dragover", (e) => { e.preventDefault(); });
+      tabsWrapEl.addEventListener("drop", (e) => {
+        if (!e.target.closest(".tab-group")) {
+          e.preventDefault();
+          const tabId = e.dataTransfer.getData("text/plain");
+          const targetTab = state.tabs.find((t) => t.id === tabId);
+          if (targetTab) {
+            targetTab.folderId = null;
+            render();
+          }
+        }
+      });
+    </script>
+  </body>
 </html>
