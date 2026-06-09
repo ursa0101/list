@@ -18,25 +18,34 @@
        🔥 請填入你的 Firebase 設定
     ══════════════════════════════════════════════ */
     const firebaseConfig = {
-      apiKey: "AIzaSyBO3BaSLWDB1DA6znk6kdo7MTN5kW56AWQ",
-      authDomain: "my-travel-planner-3c04a.firebaseapp.com",
-      databaseURL: "https://my-travel-planner-3c04a-default-rtdb.firebaseio.com",
-      projectId: "my-travel-planner-3c04a",
-      storageBucket: "my-travel-planner-3c04a.appspot.com",
-      messagingSenderId: "594711823179",
-      appId: "1:594711823179:web:a07409249767fb8084a9e5"
+      apiKey:            "YOUR_API_KEY",
+      authDomain:        "YOUR_PROJECT.firebaseapp.com",
+      databaseURL:       "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+      projectId:         "YOUR_PROJECT",
+      storageBucket:     "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId:             "YOUR_APP_ID"
     };
 
-    const fbApp = initializeApp(firebaseConfig);
-    const db = getDatabase(fbApp);
-    window.fbDB = db;
-    window.fbRefs = { ref, set, get, update, remove, onValue, onChildAdded, onChildChanged, onChildRemoved, push, serverTimestamp, onDisconnect };
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getDatabase(firebaseApp);
+
+    /* ══════════════════════════════════════════════
+       把 db helpers 掛到 window，讓 app 物件可以用
+    ══════════════════════════════════════════════ */
+    window._fb = {
+      db, ref, set, get, update, remove,
+      onValue, onChildAdded, onChildChanged, onChildRemoved,
+      push, serverTimestamp, onDisconnect
+    };
+
+    /* Firebase 載入後才初始化 app */
+    document.addEventListener('DOMContentLoaded', () => {
+      app.init();
+    });
   </script>
 
   <style>
-    /* ══════════════════════════════════════════════
-       🎨 全域核心樣式與變數 (保留 index (2) 優良底層)
-    ══════════════════════════════════════════════ */
     :root {
       --cream: #faf7f2;
       --cream2: #f4efe6;
@@ -49,1015 +58,1237 @@
       --green: #7bc8a4;
       --green-light: #e8f7f0;
       --yellow: #f7d98c;
-      --yellow-light: #fef7e5;
-      --shadow-sm: 0 4px 10px rgba(107,82,64,0.05);
-      --shadow-md: 0 8px 20px rgba(107,82,64,0.08);
-      --font-main: 'Nunito', 'Zen Maru Gothic', sans-serif;
+      --yellow-light: #fef8e7;
+      --blue: #a7c4e8;
+      --blue-light: #eaf2fb;
+      --purple: #c4a8e8;
+      --purple-light: #f3edfb;
+      --text: #5c4a38;
+      --text-muted: #9b8878;
+      --border: #e2d8cc;
+      --shadow: rgba(156, 123, 90, 0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background-color: var(--cream);
-      color: var(--brown-dark);
-      font-family: var(--font-main);
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      font-family: "Nunito", "Zen Maru Gothic", sans-serif;
+      background: var(--cream);
+      color: var(--text);
       min-height: 100vh;
-      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
     }
 
-    /* 門戶系統通用卡片 */
-    .gate-card {
-      background: #ffffff;
-      border: 3px solid var(--cream3);
-      border-radius: 32px;
-      padding: 35px 25px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: var(--shadow-md);
-      text-align: center;
-      margin-top: 40px;
-      animation: floatIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
-    }
-    @keyframes floatIn {
-      0% { opacity:0; transform: translateY(30px) scale(0.95); }
-      100% { opacity:1; transform: translateY(0) scale(1); }
-    }
-
-    h1.title {
-      font-size: 28px;
-      color: var(--brown-dark);
-      font-weight: 800;
-      margin-bottom: 25px;
+    /* ── 認證與登入外層 ── */
+    #authScreen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--cream2) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-    }
-    .subtitle {
-      font-size: 14px;
-      color: var(--brown-light);
-      margin-bottom: 25px;
-      line-height: 1.5;
+      z-index: 9999;
+      padding: 20px;
+      overflow-y: auto;
     }
 
-    .form-group { text-align: left; margin-bottom: 18px; width: 100%; }
+    .login-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 35px 40px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 12px 40px var(--shadow);
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .login-card h1 { font-size: 26px; margin-bottom: 20px; color: var(--brown-dark); text-align: center; }
+
+    .form-group { margin-bottom: 16px; }
     .form-group label {
       display: block;
+      font-size: 13px;
       font-weight: 700;
-      font-size: 14px;
-      color: var(--brown);
+      color: var(--text-muted);
       margin-bottom: 6px;
-      padding-left: 4px;
     }
-    .input-field {
+    .form-group input {
       width: 100%;
-      padding: 14px 18px;
-      border: 2px solid var(--cream3);
-      border-radius: 16px;
-      font-family: var(--font-main);
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--brown-dark);
-      background-color: var(--cream);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--cream);
       outline: none;
-      transition: all 0.25s;
+      transition: border-color 0.2s;
     }
-    .input-field:focus {
-      border-color: var(--brown-light);
-      background-color: #fff;
-      box-shadow: 0 0 0 4px var(--pink-light);
-    }
+    .form-group input:focus { border-color: var(--brown-light); background: white; }
 
-    .btn-primary {
-      width: 100%;
-      padding: 15px;
-      background: var(--brown);
-      color: #ffffff;
+    .login-buttons { display: flex; gap: 10px; margin-top: 10px; }
+
+    .btn-primary, .btn-secondary {
+      flex: 1;
+      padding: 12px 20px;
       border: none;
-      border-radius: 18px;
-      font-size: 16px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
       font-weight: 700;
-      font-family: var(--font-main);
       cursor: pointer;
-      box-shadow: 0 6px 0 var(--brown-dark), 0 8px 15px rgba(107,82,64,0.2);
-      transition: all 0.15s ease;
-      margin-top: 10px;
-    }
-    .btn-primary:active {
-      transform: translateY(4px);
-      box-shadow: 0 2px 0 var(--brown-dark), 0 4px 8px rgba(107,82,64,0.2);
-    }
-    .btn-secondary {
-      width: 100%;
-      padding: 14px;
-      background: transparent;
-      color: var(--brown);
-      border: 2px solid var(--cream3);
-      border-radius: 18px;
-      font-size: 15px;
-      font-weight: 700;
-      font-family: var(--font-main);
-      cursor: pointer;
-      margin-top: 15px;
+      font-family: inherit;
       transition: all 0.2s;
-    }
-    .btn-secondary:hover { background: var(--cream2); }
-
-    .divider {
-      margin: 25px 0;
-      position: relative;
       text-align: center;
     }
-    .divider::before {
-      content: ""; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; background: var(--cream3); z-index: 1;
-    }
-    .divider span {
-      position: relative; z-index: 2; background: #ffffff; padding: 0 15px; font-size: 13px; color: var(--brown-light); font-weight: 600;
-    }
+    .btn-primary { background: var(--brown-dark); color: white; }
+    .btn-primary:hover { background: var(--brown); transform: translateY(-1px); }
+    .btn-secondary { background: var(--cream2); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { background: var(--cream3); }
 
-    .screen { display: none; width: 100%; max-width: 480px; }
-    .screen.visible { display: block; }
+    .btn-loading { opacity: 0.7; pointer-events: none; }
 
-    /* ══════════════════════════════════════════════
-       📁 資料夾與分頁橫列專用樣式 (完美移植自 index.html)
-    ══════════════════════════════════════════════ */
-    .folder-row {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding: 10px 4px;
-      scrollbar-width: none;
-    }
-    .folder-row::-webkit-scrollbar { display: none; }
-    
-    .folder-tab {
-      background: #ffffff;
-      border: 2px solid var(--cream3);
-      padding: 8px 18px;
-      border-radius: 30px;
-      font-weight: 700;
-      color: var(--brown);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-      box-shadow: 0 4px 6px rgba(155,123,90,0.05);
-    }
-    .folder-tab.active {
-      background: var(--brown);
-      border-color: var(--brown);
-      color: #ffffff;
-      box-shadow: 0 6px 12px rgba(155,123,90,0.25);
-      transform: translateY(-2px);
-    }
-    .folder-tab .folder-del-btn {
-      margin-left: 6px;
-      font-size: 12px;
-      color: var(--brown-light);
-      transition: color 0.2s;
-    }
-    .folder-tab.active .folder-del-btn {
-      color: rgba(255,255,255,0.7);
-    }
-    .folder-tab .folder-del-btn:hover {
-      color: var(--pink) !important;
-    }
-    .folder-tab-add {
-      background: var(--cream2);
-      border: 2px dashed var(--brown-light);
-      padding: 8px 16px;
-      border-radius: 30px;
-      font-weight: 700;
-      color: var(--brown);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-    .folder-tab-add:hover {
-      background: var(--cream3);
-      transform: scale(1.02);
-    }
-
-    .tabs-row {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 5px 4px 0;
-      border-bottom: 3px solid var(--cream2);
-      margin-bottom: 20px;
-      align-items: flex-end;
-      scrollbar-width: none;
-    }
-    .tabs-row::-webkit-scrollbar { display: none; }
-    
-    .tab-item {
-      padding: 10px 20px;
-      font-weight: 700;
-      color: var(--brown-light);
-      cursor: pointer;
-      position: relative;
-      transition: all 0.2s ease;
-      white-space: nowrap;
-      background: transparent;
-      border-radius: 14px 14px 0 0;
-      border: 2px solid transparent;
-      border-bottom: none;
-      margin-bottom: -3px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .tab-item:hover { color: var(--brown); }
-    .tab-item.active {
-      color: var(--brown-dark);
-      background: var(--cream);
-      border-color: var(--cream2);
-      border-bottom: 3px solid var(--cream);
-    }
-    .tab-item .tab-del-btn {
-      font-size: 11px;
-      color: var(--brown-light);
-      margin-left: 4px;
-      opacity: 0.6;
-      transition: opacity 0.2s;
-    }
-    .tab-item:hover .tab-del-btn { opacity: 1; }
-    .tab-item .tab-del-btn:hover { color: var(--pink); }
-    
-    .tab-item-add {
-      padding: 6px 14px;
-      font-weight: 700;
-      color: var(--pink);
-      cursor: pointer;
-      background: var(--pink-light);
+    .status-badge {
+      display: block;
+      padding: 6px 12px;
       border-radius: 20px;
-      border: none;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .status-online  { background: var(--green-light); color: var(--green); }
+    .status-offline { background: #ffebee; color: #c53030; }
+
+    /* ── 房間管理大廳畫面 ── */
+    #roomManagementScreen {
+      display: none;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--cream2) 100%);
+      padding: 40px 20px;
+    }
+    .mgmt-container {
+      max-width: 550px;
+      margin: 0 auto;
+      background: white;
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: 0 12px 40px var(--shadow);
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .room-list-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 12px 0 24px 0;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .room-item-card {
       display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--cream);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .room-item-info img { width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;}
+
+    /* ── 左側滑出式側邊欄 ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      background: white;
+      border-right: 1.5px solid var(--border);
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 999;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-overlay.visible { display: block; opacity: 1; }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1.5px solid var(--border);
+      background: var(--cream2);
+    }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 16px; }
+    .sidebar-room-item {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
       font-size: 14px;
-      white-space: nowrap;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
       margin-bottom: 6px;
-      margin-left: auto;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1.5px solid transparent;
+    }
+    .sidebar-room-item:hover { background: var(--cream2); }
+    .sidebar-room-item.active { background: var(--pink-light); color: var(--pink); border-color: var(--pink); }
+
+    /* ── 主應用主畫面 ── */
+    #appScreen { display: none; }
+
+    .topbar {
+      background: var(--cream);
+      border-bottom: 1.5px solid var(--border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .topbar-title { font-size: 20px; font-weight: 800; color: var(--brown-dark); }
+    
+    /* 列表小圖標按鈕 */
+    .menu-icon-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--brown-dark);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .menu-icon-btn:hover { background: var(--cream2); }
+
+    .online-indicator {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .online-indicator.offline { background: #d32f2f; animation: none; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    .topbar-users { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .room-info-btn, .leave-btn {
+      padding: 6px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
       transition: all 0.2s;
     }
-    .tab-item-add:hover {
-      background: var(--pink);
-      color: #fff;
-      transform: scale(1.03);
-    }
+    .room-info-btn:hover { background: var(--cream2); color: var(--text); }
+    .leave-btn:hover     { border-color: #d32f2f; color: #d32f2f; }
 
-    /* ══════════════════════════════════════════════
-       🏠 主畫面板塊與主要內容元件
-    ══════════════════════════════════════════════ */
-    .app-card {
-      background: #ffffff;
-      border: 3px solid var(--cream3);
-      border-radius: 28px;
-      padding: 20px;
-      box-shadow: var(--shadow-sm);
-      margin-bottom: 20px;
-    }
-    .app-header {
+    .main-content { padding: 20px 16px 100px; max-width: 680px; margin: 0 auto; }
+
+    /* ── 資料夾分類列 ── */
+    .folders-strip { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+    .folder-btn {
+      padding: 10px 16px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s;
     }
-    .room-title-area { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    .room-title-area h2 { font-size: 20px; font-weight: 800; color: var(--brown-dark); }
-    .info-icon { font-size: 16px; color: var(--brown-light); }
-
-    .sync-status { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--brown-light); }
-    .status-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; }
-    .status-dot.pending { background: var(--yellow); animation: blink 1s infinite alternate; }
-    .status-dot.offline { background: var(--pink); }
-    @keyframes blink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
-
-    /* 線上使用者頭像列 */
-    .users-bar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 15px; }
-    .user-avatar {
-      padding: 4px 10px; background: var(--cream2); border-radius: 12px; font-size: 12px; font-weight: 700; color: var(--brown); white-space: nowrap; border: 1px solid var(--cream3);
+    .folder-btn:hover { background: var(--cream2); border-color: var(--brown-light); }
+    .folder-btn.active { background: var(--brown-dark); color: white; border-color: var(--brown-dark); }
+    .folder-add-btn {
+      padding: 10px 14px;
+      background: var(--cream2);
+      border: 1.5px dashed var(--brown-light);
+      border-radius: var(--radius-sm);
+      color: var(--brown);
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
     }
+    .folder-add-btn:hover { background: var(--cream3); }
 
-    /* 待辦事項清單 */
-    .section-title { font-size: 16px; font-weight: 800; color: var(--brown-dark); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    /* ── 分頁列 ── */
+    .tabs-strip { display: flex; gap: 4px; margin-bottom: 20px; overflow-x: auto; border-bottom: 1.5px solid var(--border); }
+    .tab {
+      padding: 8px 14px;
+      border-radius: 10px 10px 0 0;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1.5px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .tab:hover { color: var(--text); background: var(--cream2); }
+    .tab.active {
+      color: var(--brown-dark);
+      background: white;
+      border-color: var(--border);
+      border-bottom-color: white;
+    }
+    .tab-add { padding: 8px 12px; color: var(--brown-light); cursor: pointer; border-radius: var(--radius-sm); transition: all 0.2s; font-size: 16px; }
+    .tab-add:hover { color: var(--brown); background: var(--cream2); }
+
+    /* ── 待辦清單項目 ── */
+    .todo-list { display: flex; flex-direction: column; gap: 8px; }
     .todo-item {
-      display: flex; align-items: center; padding: 12px; background: var(--cream); border-radius: 14px; margin-bottom: 8px; border: 2px solid transparent; transition: all 0.2s;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
     }
-    .todo-item.done { opacity: 0.6; background: var(--cream2); }
-    .todo-item.done .todo-text { text-decoration: line-through; color: var(--brown-light); }
-    .todo-checkbox { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--brown-light); margin-right: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; background: #fff; }
-    .todo-item.done .todo-checkbox { background: var(--green); border-color: var(--green); }
-    .todo-text { flex: 1; font-weight: 600; font-size: 15px; color: var(--brown-dark); outline: none; }
-    .todo-del { color: var(--brown-light); cursor: pointer; padding: 2px 6px; font-size: 14px; }
-    .todo-del:hover { color: var(--pink); }
+    .todo-item:hover { box-shadow: 0 3px 14px var(--shadow); }
+    .todo-item.done { opacity: 0.7; background: var(--cream2); }
+    .todo-item.done .todo-text { text-decoration: line-through; color: var(--text-muted); }
 
-    .add-box { display: flex; gap: 8px; margin-top: 12px; }
-    .add-box input { flex: 1; padding: 10px 14px; border: 2px solid var(--cream3); border-radius: 12px; font-family: var(--font-main); font-weight: 600; outline: none; background: var(--cream); }
-    .add-box input:focus { border-color: var(--brown-light); background: #fff; }
-    .add-box button { padding: 0 16px; background: var(--brown); color: #fff; border: none; border-radius: 12px; font-weight: 700; font-family: var(--font-main); cursor: pointer; }
-
-    /* 隨手貼 (Sticky Notes) */
-    .notes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .sticky-note {
-      background: var(--yellow-light); border: 2px solid var(--yellow); border-radius: 16px; padding: 12px; min-height: 100px; display: flex; flex-direction: column; position: relative; box-shadow: var(--shadow-sm);
+    .todo-who { font-size: 10px; color: var(--text-muted); background: var(--cream2); border-radius: 20px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+    .todo-checkbox {
+      width: 28px; height: 28px; border: 2px solid var(--border); border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; background: white; flex-shrink: 0; transition: all 0.2s; font-size: 14px;
     }
-    .sticky-note textarea {
-      flex: 1; background: transparent; border: none; outline: none; resize: none; font-family: var(--font-main); font-weight: 600; font-size: 14px; color: var(--brown-dark); line-height: 1.4;
+    .todo-checkbox:hover  { border-color: var(--brown-light); }
+    .todo-checkbox.done   { border-color: var(--green); background: var(--green-light); color: var(--green); }
+    .todo-text { flex: 1; font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.4; }
+
+    .todo-delete { width: 28px; height: 28px; border: none; background: none; color: #d32f2f; cursor: pointer; font-size: 14px; opacity: 0; transition: all 0.2s; }
+    .todo-item:hover .todo-delete { opacity: 1; }
+    .todo-delete:hover { transform: scale(1.2); }
+
+    .add-form { display: flex; gap: 10px; margin-bottom: 16px; }
+    .add-form input {
+      flex: 1; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 9px 13px;
+      font-size: 14px; font-family: inherit; color: var(--text); background: var(--cream); outline: none; transition: border-color 0.2s;
     }
-    .sticky-note .note-del { position: absolute; right: 8px; top: 8px; font-size: 12px; color: var(--brown-light); cursor: pointer; opacity: 0; transition: opacity 0.2s; }
-    .sticky-note:hover .note-del { opacity: 1; }
+    .add-form input:focus { border-color: var(--brown-light); background: white; }
+    .add-btn { background: var(--pink); color: white; border: none; border-radius: var(--radius-sm); padding: 9px 16px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+    .add-btn:hover { background: #e8919e; }
 
-    /* 聊天室區塊 */
-    .chat-container { display: flex; flex-direction: column; height: 260px; }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 5px; display: flex; flex-direction: column; gap: 8px; }
-    .chat-msg { max-width: 80%; padding: 8px 12px; border-radius: 14px; font-size: 14px; font-weight: 600; line-height: 1.4; word-break: break-all; }
-    .chat-msg.me { background: var(--brown); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-    .chat-msg.other { background: var(--cream); color: var(--brown-dark); align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid var(--cream3); }
-    .chat-msg .msg-user { font-size: 10px; font-weight: 700; margin-bottom: 2px; opacity: 0.8; }
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty-icon  { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
 
-    /* 倒數計時器 */
-    .timer-display { font-size: 32px; font-weight: 800; color: var(--brown-dark); text-align: center; margin: 10px 0; font-variant-numeric: tabular-nums; }
-    .timer-controls { display: flex; justify-content: center; gap: 8px; }
-    .btn-sm { padding: 6px 14px; background: var(--cream2); border: 2px solid var(--cream3); border-radius: 10px; font-family: var(--font-main); font-weight: 700; font-size: 13px; color: var(--brown); cursor: pointer; }
-    .btn-sm.active { background: var(--pink-light); border-color: var(--pink); color: var(--pink); }
+    .members-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 14px; background: var(--cream2); border-radius: var(--radius-sm); border: 1.5px solid var(--border); }
+    .member-chip { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text); background: white; border-radius: 20px; padding: 4px 10px; border: 1.5px solid var(--border); }
+    .member-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
 
-    /* 彈出視窗 (Modal) */
-    .modal-overlay {
-      position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(107,82,64,0.4); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 999; opacity:0; pointer-events: none; transition: opacity 0.2s;
+    /* ── Modal ── */
+    .modal-bg { position: fixed; inset: 0; background: rgba(91, 70, 56, 0.35); display: none; align-items: center; justify-content: center; z-index: 2000; }
+    .modal-bg.visible { display: flex; }
+    .modal { background: white; border-radius: var(--radius); padding: 24px; max-width: 360px; width: 100%; box-shadow: 0 12px 40px rgba(0,0,0,.15); }
+    .modal h2 { font-size: 18px; margin-bottom: 16px; color: var(--brown-dark); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+    .sync-status { position: fixed; bottom: 20px; right: 20px; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--text-muted); box-shadow: 0 4px 12px var(--shadow); display: flex; align-items: center; gap: 6px; z-index: 90; }
+    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .sync-dot.pending { background: var(--yellow); animation: pulse 1s ease-in-out infinite; }
+
+    @media (max-width: 480px) {
+      .main-content { padding: 16px 12px 100px; }
+      .topbar       { padding: 12px 16px; }
+      .topbar-title  { font-size: 18px; }
+      .mgmt-container { padding: 20px 16px; }
     }
-    .modal-overlay.visible { opacity:1; pointer-events: auto; }
-    .modal-box {
-      background: #fff; border: 3px solid var(--cream3); border-radius: 24px; padding: 25px; width: 90%; max-width: 360px; text-align: center; box-shadow: var(--shadow-md);
-    }
-    .modal-box h3 { font-size: 18px; font-weight: 800; color: var(--brown-dark); margin-bottom: 12px; }
-    .room-code-tag { background: var(--cream); border: 2px dashed var(--brown-light); padding: 10px; border-radius: 12px; font-size: 18px; font-weight: 800; color: var(--brown-dark); margin: 15px 0; letter-spacing: 1px; }
-
-    /* 滿意度特效 */
-    .pop-effect { animation: pop 0.3s ease-out; }
-    @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
   </style>
 </head>
 <body>
 
-  <div class="screen visible" id="loginScreen">
-    <div class="gate-card">
-      <h1 class="title">✨ 我的計劃本</h1>
-      <div class="subtitle">歡迎來到多人同步協作計劃本！請先註冊或登入您的專屬帳號。</div>
-      
-      <div class="form-group">
-        <label>帳號 (電子信箱格式)</label>
-        <input type="email" id="loginEmail" class="input-field" placeholder="example@gmail.com" />
-      </div>
-      <div class="form-group">
-        <label>密碼</label>
-        <input type="password" id="loginPassword" class="input-field" placeholder="請輸入密碼" />
-      </div>
-
-      <button class="btn-primary" onclick="app.handleAuth('login')">安全登入 🚀</button>
-      <button class="btn-secondary" onclick="app.handleAuth('register')">註冊新帳號</button>
+<div id="authScreen">
+  <div class="login-card" id="loginCard" style="display:block;">
+    <h1>✨ 計劃本登入</h1>
+    <div id="statusBadge" class="status-badge status-offline">🔴 連線中...</div>
+    <div class="form-group">
+      <label>登入帳號 (Username)</label>
+      <input type="text" id="loginUsernameInput" placeholder="請輸入帳號" maxlength="30" />
+    </div>
+    <div class="form-group">
+      <label>密碼 (Password)</label>
+      <input type="password" id="loginPasswordInput" placeholder="請輸入密碼" />
+    </div>
+    <div class="login-buttons">
+      <button class="btn-primary" id="loginBtn" onclick="app.loginAccount()">登入進入</button>
+      <button class="btn-secondary" onclick="app.switchAuthView('register')">註冊帳號</button>
     </div>
   </div>
 
-  <div class="screen" id="roomScreen">
-    <div class="gate-card">
-      <h1 class="title">🏠 選擇計劃房間</h1>
-      <div class="subtitle" id="userGreeting">哈囉！請建立一個新房間，或輸入好友的邀請碼加入。</div>
-
-      <div class="form-group">
-        <label>建立全新房間</label>
-        <input type="text" id="newRoomName" class="input-field" placeholder="例如：我的東京自由行" />
-        <button class="btn-primary" onclick="app.handleCreateRoom()" style="margin-top: 8px; padding: 10px;">✨ 創立新計畫</button>
-      </div>
-
-      <div class="divider"><span>或者</span></div>
-
-      <div class="form-group">
-        <label>輸入現有邀請碼</label>
-        <input type="text" id="joinRoomId" class="input-field" placeholder="請輸入 8 碼英文數字邀請碼" style="text-transform: uppercase;" />
-        <button class="btn-secondary" onclick="app.handleJoinRoom()" style="margin-top: 8px; padding: 10px; width: 100%;">加入現有房間 🔗</button>
-      </div>
-
-      <button class="btn-secondary" onclick="app.handleLogout()" style="margin-top: 20px; border-color: var(--pink); color: var(--pink);">登出帳號</button>
+  <div class="login-card" id="registerCard" style="display:none;">
+    <h1>📝 註冊全新帳號</h1>
+    <div class="form-group">
+      <label>你的暱稱 / 名字</label>
+      <input type="text" id="regNicknameInput" placeholder="例：小美" maxlength="20" />
+    </div>
+    <div class="form-group">
+      <label>設定帳號</label>
+      <input type="text" id="regUsernameInput" placeholder="請輸入欲設定的帳號" maxlength="30" />
+    </div>
+    <div class="form-group">
+      <label>設定密碼</label>
+      <input type="password" id="regPasswordInput" placeholder="請輸入密碼" />
+    </div>
+    <div class="login-buttons">
+      <button class="btn-primary" onclick="app.registerAccount()">確定註冊帳號</button>
+      <button class="btn-secondary" onclick="app.switchAuthView('login')">返回登入</button>
     </div>
   </div>
 
-  <div class="screen" id="appScreen">
+  <div class="login-card" id="regSuccessCard" style="display:none; text-align:center;">
+    <div style="font-size: 54px; margin-bottom: 12px;">🎉</div>
+    <h1 style="color: var(--green); margin-bottom: 12px;">恭喜註冊完成！</h1>
+    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">
+      您的帳號已經成功建立！快點擊下方按鈕前往登入，開始體驗即時多人協作計劃本。
+    </p>
+    <button class="btn-primary" style="width:100%;" onclick="app.switchAuthView('login')">去登入</button>
+  </div>
+</div>
+
+<div id="roomManagementScreen">
+  <div class="mgmt-container">
+    <h2 id="mgmtUserTitle" style="font-size:22px; color:var(--brown-dark); margin-bottom:4px;">✨ 歡迎回來</h2>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">請選擇房間進入或建立新空間</p>
+
+    <div>
+      <h3 class="section-title">📍 目前已加入的房間</h3>
+      <div class="room-list-box" id="joinedRoomsList">
+        </div>
+    </div>
+
+    <hr style="border:none; border-top:1.5px solid var(--border); margin:24px 0;" />
+
+    <div class="form-group">
+      <h3 class="section-title">🔑 輸入邀請碼加入房間</h3>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <input type="text" id="joinRoomCodeInput" placeholder="請輸入 8 位數邀請碼" maxlength="8" style="text-transform:uppercase;" />
+        <button class="btn-primary" style="flex:0 0 100px; padding:10px;" onclick="app.joinRoomWithCode()">加入</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <h3 class="section-title">➕ 建立新房間</h3>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <input type="text" id="newRoomNameInput" placeholder="請為新房間取名（例：生活計畫）" maxlength="30" />
+        <button class="btn-primary" style="flex:0 0 100px; padding:10px; background:var(--pink);" onclick="app.createRoom()">建立房間</button>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:24px;">
+      <button class="btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="app.logoutAccount()">🚪 登出帳號</button>
+    </div>
+  </div>
+</div>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <div style="font-weight:800; font-size:16px; color:var(--brown-dark);">🏡 房間快速切換</div>
+    <div id="sidebarUserNick" style="font-size:12px; color:var(--text-muted); margin-top:4px;">使用者: --</div>
+  </div>
+  <div class="sidebar-menu">
+    <h3 class="section-title" style="margin-bottom:10px;">我的房間列表</h3>
+    <div id="sidebarRoomList">
+      </div>
+  </div>
+  <div style="padding:16px; border-top:1.5px solid var(--border); background:var(--cream);">
+    <button class="btn-secondary" style="width:100%; padding:10px; font-size:13px;" onclick="app.goBackToLobby()">返回房間大廳</button>
+  </div>
+</div>
+
+<div id="appScreen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-icon-btn" onclick="app.toggleSidebar()">☰</button>
+      <div class="online-indicator" id="onlineIndicator"></div>
+      <div class="topbar-title" id="appTitle">我的計劃本</div>
+    </div>
+    <div class="topbar-users" id="userCount">1 人在線</div>
+    <div class="topbar-right">
+      <button class="room-info-btn" onclick="app.showRoomInfo()">📍 邀請碼</button>
+      <button class="leave-btn"     onclick="app.goBackToLobby()">🚪 大廳</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="members-bar" id="membersBar"></div>
+
+    <div style="margin-bottom:14px;">
+      <h3 class="section-title">📁 資料夾分類</h3>
+      <div class="folders-strip" id="foldersStrip">
+        </div>
+    </div>
+
+    <div id="tabsSection" style="display:none; margin-bottom:14px;">
+      <h3 class="section-title">📄 內部細項分頁</h3>
+      <div class="tabs-strip" id="tabsStrip">
+        <span class="tab-add" onclick="app.addTab()">＋</span>
+      </div>
+    </div>
+
+    <div id="itemsSection" style="display:none;">
+      <div id="tabContent"></div>
+    </div>
     
-    <div class="app-card" style="padding: 12px 20px; margin-bottom: 12px;">
-      <div class="app-header">
-        <div class="room-title-area" onclick="app.showRoomInfo()">
-          <h2 id="roomTitleName">載入中...</h2>
-          <span class="info-icon">ℹ️</span>
-        </div>
-        <div class="sync-status">
-          <div class="status-dot" id="onlineIndicator"></div>
-          <span id="syncText">雲端同步中</span>
-        </div>
-      </div>
-      <div class="users-bar" id="usersBar"></div>
-    </div>
-
-    <div class="folder-row" id="foldersStrip"></div>
-
-    <div id="tabsSection" style="margin-top: 5px;">
-      <div class="tabs-row" id="tabsStrip"></div>
-    </div>
-
-    <div class="app-card">
-      <div class="section-title">📌 核心計畫清單</div>
-      <div id="todoList"></div>
-      <div class="add-box">
-        <input type="text" id="newTodoText" placeholder="填寫新任務..." onkeydown="if(event.key==='Enter') app.addTodo()" />
-        <button onclick="app.addTodo()">新增</button>
-      </div>
-    </div>
-
-    <div class="app-card">
-      <div class="section-title">💡 靈感隨手貼</div>
-      <div class="notes-grid" id="notesGrid"></div>
-      <button class="btn-secondary" onclick="app.addNote()" style="margin-top: 10px; padding: 8px;">＋ 新增隨手貼靈感</button>
-    </div>
-
-    <div class="app-card">
-      <div class="section-title">⏱️ 團隊專注計時</div>
-      <div class="timer-display" id="timerDisplay">25:00</div>
-      <div class="timer-controls">
-        <button class="btn-sm" id="timerToggleBtn" onclick="app.toggleTimer()">開始</button>
-        <button class="btn-sm" onclick="app.resetTimer()">重設</button>
-        <button class="btn-sm" id="pomoBtn" onclick="app.setTimerMode(25)">番茄鐘</button>
-        <button class="btn-sm" id="breakBtn" onclick="app.setTimerMode(5)">休息</button>
-      </div>
-    </div>
-
-    <div class="app-card">
-      <div class="section-title">💬 房間即時討論</div>
-      <div class="chat-container">
-        <div class="chat-messages" id="chatMessages"></div>
-        <div class="add-box">
-          <input type="text" id="chatInput" placeholder="輸入訊息..." onkeydown="if(event.key==='Enter') app.sendChatMessage()" />
-          <button onclick="app.sendChatMessage()">傳送</button>
-        </div>
-      </div>
-    </div>
-
-    <button class="btn-secondary" onclick="app.exitRoom()" style="margin-bottom: 40px;">返回大廳選擇房間</button>
-  </div>
-
-  <div class="modal-overlay" id="roomInfoModal" onclick="this.classList.remove('visible')">
-    <div class="modal-box" onclick="event.stopPropagation()">
-      <h3>房間名稱：<span id="modalRoomName"></span></h3>
-      <p style="color: var(--brown-light); font-size: 13px;">分享此代碼給好友，即可共同編輯！</p>
-      <div class="room-code-tag" id="modalRoomCode">------</div>
-      <button class="btn-primary" onclick="app.copyRoomCode()" style="padding: 10px; font-size:14px;">📋 複製邀請碼</button>
-      <button class="btn-secondary" onclick="document.getElementById('roomInfoModal').classList.remove('visible')" style="padding: 8px; margin-top:10px; font-size:14px;">關閉</button>
+    <div id="blankRoomWelcome" class="empty-state" style="display:none;">
+      <div class="empty-icon">✨</div>
+      <p style="font-weight:700; color:var(--brown-dark);">這是一個全新空白的房間！</p>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">請點擊上方「＋ 新增資料夾」開始建立您的筆記結構</p>
     </div>
   </div>
 
-  <script>
-    const app = {
-      state: {
-        userId: '',
-        userEmail: '',
-        roomId: '',
-        roomName: '',
-        folders: [],
-        tabs: [],
-        activeFolderId: 'default',
-        activeTabId: '',
-        isOnline: true,
-        timerInstance: null
-      },
-      fbListeners: [],
+  <div class="sync-status">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncText">已同步</span>
+  </div>
+</div>
 
-      init() {
-        // 每秒檢查一下 Firebase 是否初始化完成
-        const checkFB = setInterval(() => {
-          if (window.fbDB) {
-            clearInterval(checkFB);
-            this.bindAuthChanges();
-          }
-        }, 100);
-      },
+<div id="roomInfoModal" class="modal-bg">
+  <div class="modal">
+    <h2>📍 房間資訊</h2>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">房間名稱</div>
+      <div style="font-size:16px;font-weight:700;color:var(--brown-dark);" id="modalRoomName"></div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">房間邀請碼</div>
+      <div style="font-size:20px;font-weight:800;font-family:monospace;letter-spacing:2px;color:var(--pink);" id="modalRoomCode"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="app.copyRoomCode()">📋 複製邀請碼</button>
+      <button class="btn-primary" onclick="document.getElementById('roomInfoModal').classList.remove('visible')">關閉</button>
+    </div>
+  </div>
+</div>
 
-      /* 🔒 帳號與門戶監聽 (保留 index (2) 功能) */
-      bindAuthChanges() {
-        // 本地暫代 Auth 機制 (配合 Realtime DB 安全防護與多房間系統)
-        const savedUid = localStorage.getItem('planner_uid');
-        const savedEmail = localStorage.getItem('planner_email');
-        if (savedUid && savedEmail) {
-          this.state.userId = savedUid;
-          this.state.userEmail = savedEmail;
-          this.switchScreen('roomScreen');
-          document.getElementById('userGreeting').textContent = `哈囉 (${savedEmail})！請建立一個新房間，或輸入好友的邀請碼加入。`;
-        }
-      },
+<script>
+/* ══════════════════════════════════════════════════════════════
+   🎯 多人協作計劃本 — Firebase Realtime Database 升級版
+   資料結構：
+     users/{username}/password -> 密碼字串
+     users/{username}/nickname -> 暱稱字串
+     users/{username}/joinedRooms/{roomId} -> { name, joinedAt }
+     rooms/{roomId}/meta -> { name, createdBy, createdAt }
+     rooms/{roomId}/folders/{folderId} -> { name, order }
+     rooms/{roomId}/tabs/{tabId} -> { folderId, name, order }
+     rooms/{roomId}/items/{itemId} -> { tabId, text, done, doneBy, doneAt, addedBy, addedAt }
+     rooms/{roomId}/presence/{userId} -> { nickname, online: true }
+   ══════════════════════════════════════════════════════════════ */
 
-      handleAuth(type) {
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
-        if (!email || !password) return alert('請填寫完整帳號與密碼！');
-        if (password.length < 6) return alert('為了安全起見，密碼必須至少 6 位數哦！');
+const app = {
+  state: {
+    username:   null, // 唯一使用者帳號
+    nickname:   null, // 使用者暱稱
+    userId:     null, // 當前設備隨機產生的 Presence ID
+    roomId:     null, // 當前進入的房間ID
+    roomName:   null, // 當前進入的房間名稱
+    isOnline:   false,
+    joinedRooms:{},   // 使用者擁有的房間列表
+    folders:    {},   // 當前房間的資料夾
+    tabs:       {},   // 當前房間的分頁
+    items:      {},   // 當前房間的項目
+    members:    {},   // 在線成員
+    activeFolder: null, // 選中的資料夾ID
+    activeTab:  null    // 選中的分頁ID
+  },
 
-        const { ref, set, get } = window.fbRefs;
-        const cleanEmailKey = email.replace(/[.#$\[\]]/g, "_");
-        const userRef = ref(window.fbDB, `users/${cleanEmailKey}`);
+  _unsubs: [],
+  _lobbyUnsub: null,
 
-        if (type === 'register') {
-          get(userRef).then((snapshot) => {
-            if (snapshot.exists()) {
-              alert('此帳號已存在，請直接登入！');
-            } else {
-              const uid = this._genUserId();
-              set(userRef, { uid, password, email }).then(() => {
-                alert('🎉 註冊成功！已為您自動登入。');
-                this._logInSuccess(uid, email);
-              });
-            }
-          });
-        } else {
-          get(userRef).then((snapshot) => {
-            if (snapshot.exists() && snapshot.val().password === password) {
-              this._logInSuccess(snapshot.val().uid, email);
-            } else {
-              alert('帳號密碼錯誤或不存在，請重新確認！');
-            }
-          });
-        }
-      },
-
-      _logInSuccess(uid, email) {
-        localStorage.setItem('planner_uid', uid);
-        localStorage.setItem('planner_email', email);
-        this.state.userId = uid;
-        this.state.userEmail = email;
-        document.getElementById('userGreeting').textContent = `哈囉 (${email})！請建立一個新房間，或輸入好友的邀請碼加入。`;
-        this.switchScreen('roomScreen');
-      },
-
-      handleLogout() {
-        localStorage.clear();
-        this.state.userId = '';
-        this.state.userEmail = '';
-        this.switchScreen('loginScreen');
-      },
-
-      /* 🏠 房間與大廳處理 */
-      handleCreateRoom() {
-        const name = document.getElementById('newRoomName').value.trim();
-        if (!name) return alert('請幫你的新房間取個可愛的名字吧！');
-        const rId = this._genRoomCode();
-        
-        const { ref, set } = window.fbRefs;
-        const roomRef = ref(window.fbDB, `rooms/${rId}`);
-        
-        const initialData = {
-          info: { id: rId, name: name, createdAt: Date.now() },
-          folders: { default: { id: 'default', name: '主要分類', order: 0 } },
-          tabs: { default_tab: { id: 'default_tab', folderId: 'default', name: '總覽頁面', order: 0 } }
-        };
-
-        set(roomRef, initialData).then(() => {
-          this.enterRoom(rId);
-        }).catch(err => alert('建立失敗: ' + err));
-      },
-
-      handleJoinRoom() {
-        const rId = document.getElementById('joinRoomId').value.trim().toUpperCase();
-        if (rId.length !== 8) return alert('邀請碼必須是 8 位英文數字哦！');
-
-        const { ref, get } = window.fbRefs;
-        get(ref(window.fbDB, `rooms/${rId}/info`)).then((snap) => {
-          if (snap.exists()) {
-            this.enterRoom(rId);
-          } else {
-            alert('找不到該房間，請檢查邀請碼是否正確！');
-          }
-        });
-      },
-
-      enterRoom(rId) {
-        this.state.roomId = rId;
-        this.switchScreen('appScreen');
-        this.setupRoomSync();
-      },
-
-      exitRoom() {
-        this.detachRoomListeners();
-        this.state.roomId = '';
-        this.switchScreen('roomScreen');
-      },
-
-      /* ⚡ 即時雲端數據同步核心 */
-      setupRoomSync() {
-        const { ref, onValue, set, onDisconnect } = window.fbRefs;
-        const rId = this.state.roomId;
-
-        // 1. 監聽房間基本資訊
-        const infoRef = ref(window.fbDB, `rooms/${rId}/info`);
-        this._addTrackedListener(infoRef, onValue(infoRef, (snap) => {
-          if (snap.exists()) {
-            this.state.roomName = snap.val().name;
-            document.getElementById('roomTitleName').textContent = snap.val().name + ' ▾';
-          }
-        }));
-
-        // 2. 監聽資料夾結構
-        const foldersRef = ref(window.fbDB, `rooms/${rId}/folders`);
-        this._addTrackedListener(foldersRef, onValue(foldersRef, (snap) => {
-          const list = [];
-          snap.forEach((child) => { list.push(child.val()); });
-          this.state.folders = list.sort((a,b) => (a.order || 0) - (b.order || 0));
-          
-          if (!this.state.folders.find(f => f.id === this.state.activeFolderId)) {
-            this.state.activeFolderId = this.state.folders[0]?.id || 'default';
-          }
-          this.render();
-        }));
-
-        // 3. 監聽分頁構造
-        const tabsRef = ref(window.fbDB, `rooms/${rId}/tabs`);
-        this._addTrackedListener(tabsRef, onValue(tabsRef, (snap) => {
-          const list = [];
-          snap.forEach((child) => { list.push(child.val()); });
-          this.state.tabs = list.sort((a,b) => (a.order || 0) - (b.order || 0));
-          
-          const currentTabs = this.state.tabs.filter(t => t.folderId === this.state.activeFolderId);
-          if (currentTabs.length > 0 && !currentTabs.find(t => t.id === this.state.activeTabId)) {
-            this.state.activeTabId = currentTabs[0].id;
-          }
-          this.render();
-        }));
-
-        // 4. 當前分頁內容深度同步 (待辦事項、隨手貼、計時器、聊天室)
-        this.setupContentSync();
-
-        // 5. 線上狀態同步名冊機制
-        const presenceRef = ref(window.fbDB, `rooms/${rId}/presence/${this.state.userId}`);
-        set(presenceRef, { email: this.state.userEmail, lastSeen: Date.now() });
-        onDisconnect(presenceRef).remove();
-
-        const allPresenceRef = ref(window.fbDB, `rooms/${rId}/presence`);
-        this._addTrackedListener(allPresenceRef, onValue(allPresenceRef, (snap) => {
-          const usersBar = document.getElementById('usersBar');
-          if (usersBar) {
-            let html = '';
-            snap.forEach((u) => {
-              html += `<div class="user-avatar">👤 ${this._escapeHtml(u.val().email.split('@')[0])}</div>`;
-            });
-            usersBar.innerHTML = html;
-          }
-        }));
-      },
-
-      setupContentSync() {
-        const { ref, onValue } = window.fbRefs;
-        const rId = this.state.roomId;
-
-        // 清理前一個分頁的單獨監聽器
-        if (this.contentListeners) { this.contentListeners.forEach(un => un()); }
-        this.contentListeners = [];
-
-        if (!this.state.activeTabId) return;
-        const tId = this.state.activeTabId;
-
-        // 監聽待辦事項
-        const todosRef = ref(window.fbDB, `rooms/${rId}/data/${tId}/todos`);
-        this.contentListeners.push(onValue(todosRef, (snap) => {
-          const container = document.getElementById('todoList');
-          if (!container) return;
-          let html = '';
-          snap.forEach((child) => {
-            const item = child.val();
-            html += `
-              <div class="todo-item ${item.done ? 'done' : ''}">
-                <div class="todo-checkbox" onclick="app.toggleTodo('${item.id}', ${item.done})">${item.done ? '✓' : ''}</div>
-                <div class="todo-text">${this._escapeHtml(item.text)}</div>
-                <div class="todo-del" onclick="app.deleteTodo('${item.id}')">✕</div>
-              </div>
-            `;
-          });
-          container.innerHTML = html;
-        }));
-
-        // 監聽隨手貼靈感
-        const notesRef = ref(window.fbDB, `rooms/${rId}/data/${tId}/notes`);
-        this.contentListeners.push(onValue(notesRef, (snap) => {
-          const container = document.getElementById('notesGrid');
-          if (!container) return;
-          let html = '';
-          snap.forEach((child) => {
-            const item = child.val();
-            html += `
-              <div class="sticky-note">
-                <span class="note-del" onclick="app.deleteNote('${item.id}')">✕</span>
-                <textarea onchange="app.updateNote('${item.id}', this.value)">${this._escapeHtml(item.content || '')}</textarea>
-              </div>
-            `;
-          });
-          container.innerHTML = html;
-        }));
-
-        // 監聽即時聊天室 (限定此分頁討論)
-        const chatsRef = ref(window.fbDB, `rooms/${rId}/data/${tId}/chats`);
-        this.contentListeners.push(onValue(chatsRef, (snap) => {
-          const container = document.getElementById('chatMessages');
-          if (!container) return;
-          let html = '';
-          snap.forEach((child) => {
-            const msg = child.val();
-            const isMe = msg.uid === this.state.userId;
-            html += `
-              <div class="chat-msg ${isMe ? 'me' : 'other'}">
-                <div class="msg-user">${this._escapeHtml(msg.user.split('@')[0])}</div>
-                <div>${this._escapeHtml(msg.text)}</div>
-              </div>
-            `;
-          });
-          container.innerHTML = html;
-          container.scrollTop = container.scrollHeight;
-        }));
-
-        // 監聽倒數計時器
-        const timerRef = ref(window.fbDB, `rooms/${rId}/data/${tId}/timer`);
-        this.contentListeners.push(onValue(timerRef, (snap) => {
-          if (!snap.exists()) return;
-          const data = snap.val();
-          this.syncTimerState(data);
-        }));
-      },
-
-      _addTrackedListener(refObj, unsubscribeFunc) {
-        this.fbListeners.push({ refObj, unsubscribeFunc });
-      },
-      detachRoomListeners() {
-        if (this.fbListeners) { this.fbListeners.forEach(item => item.unsubscribeFunc()); this.fbListeners = []; }
-        if (this.contentListeners) { this.contentListeners.forEach(un => un()); this.contentListeners = []; }
-        if (this.state.timerInstance) { clearInterval(this.state.timerInstance); this.state.timerInstance = null; }
-      },
-
-      /* ══════════════════════════════════════════════
-         🎨 資料夾與分頁畫面動態渲染更新 (融合 index.html 外觀樣式)
-      ══════════════════════════════════════════════ */
-      render() {
-        /* 1. 渲染 資料夾 橫列 */
-        const foldersStrip = document.getElementById('foldersStrip');
-        if (foldersStrip) {
-          let html = '';
-          this.state.folders.forEach(f => {
-            const isActive = f.id === this.state.activeFolderId;
-            html += `
-              <div class="folder-tab ${isActive ? 'active' : ''}" onclick="app.switchFolder('${f.id}')">
-                <span>📁 ${this._escapeHtml(f.name)}</span>
-                ${f.id !== 'default' ? `<span class="folder-del-btn" onclick="event.stopPropagation(); app.deleteFolder('${f.id}')">✕</span>` : ''}
-              </div>
-            `;
-          });
-          html += `
-            <div class="folder-tab-add" onclick="app.promptAddFolder()">
-              <span>＋ 新增資料夾</span>
-            </div>
-          `;
-          foldersStrip.innerHTML = html;
-        }
-
-        /* 2. 渲染對應資料夾下的 分頁橫列 */
-        const tabsStrip = document.getElementById('tabsStrip');
-        const tabsSection = document.getElementById('tabsSection');
-        if (tabsStrip) {
-          const currentTabs = this.state.tabs.filter(t => t.folderId === this.state.activeFolderId);
-          if (currentTabs.length === 0) {
-            tabsSection.style.display = 'none';
-          } else {
-            tabsSection.style.display = 'block';
-            let html = '';
-            currentTabs.forEach(t => {
-              const isActive = t.id === this.state.activeTabId;
-              html += `
-                <div class="tab-item ${isActive ? 'active' : ''}" onclick="app.switchTab('${t.id}')">
-                  <span>${this._escapeHtml(t.name)}</span>
-                  ${currentTabs.length > 1 ? `<span class="tab-del-btn" onclick="event.stopPropagation(); app.deleteTab('${t.id}')">✕</span>` : ''}
-                </div>
-              `;
-            });
-            html += `
-              <button class="tab-item-add" onclick="app.promptAddTab()">
-                <span>＋ 新增分頁</span>
-              </button>
-            `;
-            tabsStrip.innerHTML = html;
-          }
-        }
-      },
-
-      /* 資料夾與分頁之動態操控 */
-      switchFolder(fId) {
-        this.state.activeFolderId = fId;
-        const currentTabs = this.state.tabs.filter(t => t.folderId === fId);
-        this.state.activeTabId = currentTabs[0]?.id || '';
-        this.render();
-        this.setupRoomSync();
-      },
-      switchTab(tId) {
-        this.state.activeTabId = tId;
-        this.render();
-        this.setupContentSync();
-      },
-
-      promptAddFolder() {
-        const name = prompt("請輸入新資料夾名稱：");
-        if (!name || !name.trim()) return;
-        const { ref, set } = window.fbRefs;
-        const id = this.generateId();
-        set(ref(window.fbDB, `rooms/${this.state.roomId}/folders/${id}`), {
-          id, name: name.trim(), order: this.state.folders.length * 10
-        }).then(() => {
-          // 自動幫新建的資料夾補上一個預設分頁
-          const tabId = this.generateId();
-          set(ref(window.fbDB, `rooms/${this.state.roomId}/tabs/${tabId}`), {
-            id: tabId, folderId: id, name: '第一頁', order: 0
-          });
-          this.state.activeFolderId = id;
-          this.state.activeTabId = tabId;
-        });
-      },
-      deleteFolder(id) {
-        if (!confirm('您確定要刪除整個資料夾與底下的所有分頁內容嗎？')) return;
-        const { ref, remove } = window.fbRefs;
-        remove(ref(window.fbDB, `rooms/${this.state.roomId}/folders/${id}`));
-        // 連帶刪除該資料夾分頁
-        this.state.tabs.filter(t => t.folderId === id).forEach(t => {
-          remove(ref(window.fbDB, `rooms/${this.state.roomId}/tabs/${t.id}`));
-          remove(ref(window.fbDB, `rooms/${this.state.roomId}/data/${t.id}`));
-        });
-      },
-
-      promptAddTab() {
-        const name = prompt("請輸入新分頁標題：");
-        if (!name || !name.trim()) return;
-        const { ref, set } = window.fbRefs;
-        const id = this.generateId();
-        set(ref(window.fbDB, `rooms/${this.state.roomId}/tabs/${id}`), {
-          id, folderId: this.state.activeFolderId, name: name.trim(), order: this.state.tabs.length * 10
-        }).then(() => {
-          this.state.activeTabId = id;
-        });
-      },
-      deleteTab(id) {
-        if (!confirm('確定刪除該分頁與其所有計畫資料嗎？')) return;
-        const { ref, remove } = window.fbRefs;
-        remove(ref(window.fbDB, `rooms/${this.state.roomId}/tabs/${id}`));
-        remove(ref(window.fbDB, `rooms/${this.state.roomId}/data/${id}`));
-      },
-
-      /* 📝 項目操作 (待辦事項) */
-      addTodo() {
-        const input = document.getElementById('newTodoText');
-        const text = input.value.trim();
-        if (!text) return;
-        const { ref, set } = window.fbRefs;
-        const id = this.generateId();
-        set(ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/todos/${id}`), { id, text, done: false });
-        input.value = '';
-      },
-      toggleTodo(id, curStatus) {
-        const { ref, update } = window.fbRefs;
-        update(ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/todos/${id}`), { done: !curStatus });
-      },
-      deleteTodo(id) {
-        const { ref, remove } = window.fbRefs;
-        remove(ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/todos/${id}`));
-      },
-
-      /* 💡 靈感貼紙控制 */
-      addNote() {
-        const { ref, set } = window.fbRefs;
-        const id = this.generateId();
-        set(ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/notes/${id}`), { id, content: '' });
-      },
-      updateNote(id, val) {
-        const { ref, update } = window.fbRefs;
-        update(ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/notes/${id}`), { content: val });
-      },
-      deleteNote(id) {
-        const { ref, remove } = window.fbRefs;
-        remove(ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/notes/${id}`));
-      },
-
-      /* 💬 聊天訊息 */
-      sendChatMessage() {
-        const input = document.getElementById('chatInput');
-        const text = input.value.trim();
-        if (!text) return;
-        const { ref, push } = window.fbRefs;
-        push(ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/chats`), {
-          uid: this.state.userId, user: this.state.userEmail, text, timestamp: Date.now()
-        });
-        input.value = '';
-      },
-
-      /* ⏱️ 聯合計時器控制邏輯 */
-      syncTimerState(data) {
-        if (this.state.timerInstance) clearInterval(this.state.timerInstance);
-        const display = document.getElementById('timerDisplay');
-        const btn = document.getElementById('timerToggleBtn');
-
-        if (data.status === 'running') {
-          btn.textContent = '暫停';
-          btn.classList.add('active');
-          const renderCountdown = () => {
-            const elapsed = Math.floor((Date.now() - data.startTime) / 1000);
-            const remain = data.duration - elapsed;
-            if (remain <= 0) {
-              clearInterval(this.state.timerInstance);
-              display.textContent = "00:00";
-              btn.textContent = "開始";
-              btn.classList.remove('active');
-            } else {
-              display.textContent = this._formatTime(remain);
-            }
-          };
-          renderCountdown();
-          this.state.timerInstance = setInterval(renderCountdown, 1000);
-        } else {
-          btn.textContent = '開始';
-          btn.classList.remove('active');
-          display.textContent = this._formatTime(data.timeLeft);
-        }
-      },
-      toggleTimer() {
-        const { ref, get, set } = window.fbRefs;
-        const timerRef = ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/timer`);
-        get(timerRef).then(snap => {
-          let current = snap.exists() ? snap.val() : { status: 'stopped', duration: 1500, timeLeft: 1500 };
-          if (current.status === 'running') {
-            const elapsed = Math.floor((Date.now() - current.startTime) / 1000);
-            let left = current.duration - elapsed;
-            if (left < 0) left = 0;
-            set(timerRef, { status: 'paused', duration: current.duration, timeLeft: left });
-          } else {
-            const d = current.status === 'paused' ? current.timeLeft : current.duration;
-            set(timerRef, { status: 'running', duration: d, startTime: Date.now() });
-          }
-        });
-      },
-      resetTimer() {
-        const { ref, get, set } = window.fbRefs;
-        const timerRef = ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/timer`);
-        get(timerRef).then(snap => {
-          const dur = snap.exists() ? (snap.val().duration || 1500) : 1500;
-          set(timerRef, { status: 'stopped', duration: dur, timeLeft: dur });
-        });
-      },
-      setTimerMode(minutes) {
-        const { ref, set } = window.fbRefs;
-        const dur = minutes * 60;
-        set(ref(window.fbDB, `rooms/${this.state.roomId}/data/${this.state.activeTabId}/timer`), {
-          status: 'stopped', duration: dur, timeLeft: dur
-        });
-      },
-
-      /* 🛠️ 共用輔助小工具 */
-      switchScreen(sId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('visible'));
-        document.getElementById(sId)?.classList.add('visible');
-      },
-      _genRoomCode() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        return Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-      },
-      _genUserId() { return 'u_' + Math.random().toString(36).substr(2, 9); },
-      generateId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); },
-      showRoomInfo() {
-        document.getElementById('modalRoomName').textContent = this.state.roomName;
-        document.getElementById('modalRoomCode').textContent = this.state.roomId;
-        document.getElementById('roomInfoModal').classList.add('visible');
-      },
-      copyRoomCode() {
-        navigator.clipboard.writeText(this.state.roomId).then(() => {
-          alert('邀請碼複製成功，快分享給好友加入：' + this.state.roomId);
-        });
-      },
-      _formatTime(sec) {
-        const m = Math.floor(sec / 60).toString().padStart(2, '0');
-        const s = (sec % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
-      },
-      _escapeHtml(s) {
-        return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  init() {
+    const wait = setInterval(() => {
+      if (window._fb) {
+        clearInterval(wait);
+        this._onFirebaseReady();
       }
-    };
+    }, 50);
+  },
 
-    window.onload = () => app.init();
-  </script>
+  _onFirebaseReady() {
+    // 檢查 LocalStorage 狀態嘗試自動登入
+    const savedSession = localStorage.getItem('planner_session');
+    if (savedSession) {
+      try {
+        const sess = JSON.parse(savedSession);
+        this.state.username = sess.username;
+        this.state.nickname = sess.nickname;
+        this.state.userId = this._genUserId();
+        this.showRoomManagement();
+      } catch(_) {
+        this.switchAuthView('login');
+      }
+    } else {
+      this.switchAuthView('login');
+    }
+
+    document.getElementById('statusBadge').className = 'status-badge status-online';
+    document.getElementById('statusBadge').textContent = '🟢 Firebase 伺服器已連線';
+  },
+
+  switchAuthView(view) {
+    document.getElementById('loginCard').style.display = view === 'login' ? 'block' : 'none';
+    document.getElementById('registerCard').style.display = view === 'register' ? 'block' : 'none';
+    document.getElementById('regSuccessCard').style.display = view === 'regSuccess' ? 'block' : 'none';
+  },
+
+  /* ── 註冊邏輯 ── */
+  async registerAccount() {
+    const nickname = document.getElementById('regNicknameInput').value.trim();
+    const username = document.getElementById('regUsernameInput').value.trim().toLowerCase();
+    const password = document.getElementById('regPasswordInput').value.trim();
+
+    if (!nickname || !username || !password) { alert('請完整填寫所有註冊欄位！'); return; }
+    if (username.length < 3) { alert('帳號長度至少需 3 個字元！'); return; }
+
+    const { db, ref, get, set } = window._fb;
+    try {
+      const userSnap = await get(ref(db, `users/${username}`));
+      if (userSnap.exists()) { alert('此帳號已存在，請換一個帳號名稱！'); return; }
+
+      // 寫入帳號資料
+      await set(ref(db, `users/${username}`), {
+        nickname: nickname,
+        password: password,
+        createdAt: Date.now()
+      });
+
+      // 清空註冊欄位並跳轉到註冊成功畫面
+      document.getElementById('regNicknameInput').value = '';
+      document.getElementById('regUsernameInput').value = '';
+      document.getElementById('regPasswordInput').value = '';
+      this.switchAuthView('regSuccess');
+    } catch(e) {
+      alert('註冊發生錯誤：' + e.message);
+    }
+  },
+
+  /* ── 登入邏輯 ── */
+  async loginAccount() {
+    const username = document.getElementById('loginUsernameInput').value.trim().toLowerCase();
+    const password = document.getElementById('loginPasswordInput').value.trim();
+
+    if (!username || !password) { alert('請輸入帳號與密碼！'); return; }
+
+    const { db, ref, get } = window._fb;
+    try {
+      const userSnap = await get(ref(db, `users/${username}`));
+      if (!userSnap.exists()) { alert('帳號不存在，請先註冊！'); return; }
+
+      const userData = userSnap.val();
+      if (userData.password !== password) { alert('密碼錯誤，請再試一次！'); return; }
+
+      this.state.username = username;
+      this.state.nickname = userData.nickname;
+      this.state.userId = this._genUserId();
+
+      // 保存工作階段
+      localStorage.setItem('planner_session', JSON.stringify({
+        username: username,
+        nickname: userData.nickname
+      }));
+
+      this.showRoomManagement();
+    } catch(e) {
+      alert('登入失敗：' + e.message);
+    }
+  },
+
+  /* ── 進入大廳並監聽房間列表 ── */
+  showRoomManagement() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('roomManagementScreen').style.display = 'block';
+    document.getElementById('appScreen').style.display = 'none';
+
+    document.getElementById('mgmtUserTitle').textContent = `✨ 歡迎回來，${this.state.nickname}`;
+
+    const { db, ref, onValue } = window._fb;
+    const userRoomsRef = ref(db, `users/${this.state.username}/joinedRooms`);
+
+    if (this._lobbyUnsub) this._lobbyUnsub();
+
+    this._lobbyUnsub = onValue(userRoomsRef, snap => {
+      this.state.joinedRooms = snap.val() || {};
+      this.renderLobbyRoomList();
+      this.renderSidebarRoomList();
+    });
+  },
+
+  renderLobbyRoomList() {
+    const container = document.getElementById('joinedRoomsList');
+    if (!container) return;
+
+    const roomsArray = Object.entries(this.state.joinedRooms);
+    if (roomsArray.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:30px; color:var(--text-muted); background:var(--cream); border-radius:var(--radius-sm); border:1.5px dashed var(--border); font-size:13px;">
+          您目前尚未加入任何協作房間，請在下方建立新房間或輸入邀請碼加入！
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = roomsArray.map(([rid, r]) => `
+      <div class="room-item-card">
+        <div>
+          <div style="font-weight:700; color:var(--brown-dark); font-size:15px;">🏡 ${this.escapeHtml(r.name)}</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">邀請碼: <span style="font-family:monospace; font-weight:700;">${rid}</span></div>
+        </div>
+        <button class="btn-primary" style="flex:none; padding:6px 14px; font-size:13px;" onclick="app.enterRoom('${rid}', '${r.name}')">進入房間 →</button>
+      </div>
+    `).join('');
+  },
+
+  /* ── 建立自訂名稱房間（自動生成邀請碼） ── */
+  async createRoom() {
+    const roomName = document.getElementById('newRoomNameInput').value.trim();
+    if (!roomName) { alert('請輸入欲建立的房間名稱！'); return; }
+
+    const roomId = this._genRoomId(); // 自動生成 8 碼不重複代碼
+    const { db, ref, set } = window._fb;
+
+    try {
+      // 1. 寫入房間基本資訊
+      await set(ref(db, `rooms/${roomId}/meta`), {
+        name: roomName,
+        createdBy: this.state.username,
+        createdAt: Date.now()
+      });
+
+      // 2. 把房間加入到使用者的個人清單中
+      await set(ref(db, `users/${this.state.username}/joinedRooms/${roomId}`), {
+        name: roomName,
+        joinedAt: Date.now()
+      });
+
+      document.getElementById('newRoomNameInput').value = '';
+      
+      // 自動進入此全新房間
+      this.enterRoom(roomId, roomName);
+    } catch(e) {
+      alert('建立房間失敗：' + e.message);
+    }
+  },
+
+  /* ── 透過邀請碼加入房間 ── */
+  async joinRoomWithCode() {
+    const code = document.getElementById('joinRoomCodeInput').value.trim().toUpperCase();
+    if (!code) { alert('請輸入房間邀請碼！'); return; }
+
+    const { db, ref, get, set } = window._fb;
+    try {
+      const roomSnap = await get(ref(db, `rooms/${code}/meta`));
+      if (!roomSnap.exists()) { alert('找不到該房間，請確認邀請碼是否正確！'); return; }
+
+      const roomMeta = roomSnap.val();
+
+      // 把房間關聯寫入使用者的清單中
+      await set(ref(db, `users/${this.state.username}/joinedRooms/${code}`), {
+        name: roomMeta.name,
+        joinedAt: Date.now()
+      });
+
+      document.getElementById('joinRoomCodeInput').value = '';
+      this.enterRoom(code, roomMeta.name);
+    } catch(e) {
+      alert('加入房間失敗：' + e.message);
+    }
+  },
+
+  /* ── 進入主要協作應用空間 ── */
+  enterRoom(roomId, roomName) {
+    this.state.roomId = roomId;
+    this.state.roomName = roomName;
+
+    document.getElementById('roomManagementScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+
+    document.getElementById('appTitle').textContent = roomName;
+
+    // 清空舊的房間監聽器
+    this._unsubs.forEach(u => u());
+    this._unsubs = [];
+
+    // 重設選中狀態
+    this.state.activeFolder = null;
+    this.state.activeTab = null;
+
+    this.state.isOnline = true;
+    this.updateOnlineStatus();
+
+    // 啟動資料庫即時同步監聽
+    this._setupPresence();
+    this._listenFolders();
+    this._listenTabs();
+    this._listenItems();
+    this._listenMembers();
+  },
+
+  goBackToLobby() {
+    // 斷開 Presence
+    const { db, ref, remove } = window._fb;
+    if (this.state.roomId && this.state.userId) {
+      remove(ref(db, `rooms/${this.state.roomId}/presence/${this.state.userId}`));
+    }
+    this._unsubs.forEach(u => u());
+    this._unsubs = [];
+    
+    if (document.getElementById('sidebar').classList.contains('open')) {
+      this.toggleSidebar();
+    }
+
+    this.showRoomManagement();
+  },
+
+  logoutAccount() {
+    if (this._lobbyUnsub) this._lobbyUnsub();
+    localStorage.removeItem('planner_session');
+    location.reload();
+  },
+
+  /* ── 側邊欄控制與切換 ── */
+  toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+    } else {
+      sidebar.classList.add('open');
+      overlay.classList.add('visible');
+      document.getElementById('sidebarUserNick').textContent = `使用者暱稱: ${this.state.nickname}`;
+      this.renderSidebarRoomList();
+    }
+  },
+
+  renderSidebarRoomList() {
+    const container = document.getElementById('sidebarRoomList');
+    if (!container) return;
+
+    const roomsArray = Object.entries(this.state.joinedRooms);
+    if (roomsArray.length === 0) {
+      container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">暫無房間</div>';
+      return;
+    }
+
+    container.innerHTML = roomsArray.map(([rid, r]) => {
+      const isActive = rid === this.state.roomId;
+      return `
+        <div class="sidebar-room-item ${isActive ? 'active' : ''}" onclick="app.handleSidebarSwitch('${rid}', '${r.name}')">
+          <span>🏡 ${this.escapeHtml(r.name)}</span>
+          <span style="font-family:monospace; font-size:10px; opacity:0.6;">${rid}</span>
+        </div>
+      `;
+    }).join('');
+  },
+
+  handleSidebarSwitch(roomId, roomName) {
+    this.toggleSidebar();
+    this.enterRoom(roomId, roomName);
+  },
+
+  /* ────────────────────────────────────────────
+     三層結構即時資料庫監聽 (資料夾 -> 分頁 -> 待辦項目)
+  ──────────────────────────────────────────── */
+  _listenFolders() {
+    const { db, ref, onValue } = window._fb;
+    const foldersRef = ref(db, `rooms/${this.state.roomId}/folders`);
+    const unsub = onValue(foldersRef, snap => {
+      this.state.folders = snap.val() || {};
+      const fIds = Object.keys(this.state.folders);
+      // 若當前沒有選取資料夾，預選第一個
+      if (!this.state.activeFolder || !this.state.folders[this.state.activeFolder]) {
+        this.state.activeFolder = fIds.length ? fIds[0] : null;
+      }
+      this.render();
+      this.showSyncStatus('synced');
+    });
+    this._unsubs.push(unsub);
+  },
+
+  _listenTabs() {
+    const { db, ref, onValue } = window._fb;
+    const tabsRef = ref(db, `rooms/${this.state.roomId}/tabs`);
+    const unsub = onValue(tabsRef, snap => {
+      this.state.tabs = snap.val() || {};
+      this.render();
+    });
+    this._unsubs.push(unsub);
+  },
+
+  _listenItems() {
+    const { db, ref, onValue } = window._fb;
+    const itemsRef = ref(db, `rooms/${this.state.roomId}/items`);
+    const unsub = onValue(itemsRef, snap => {
+      this.state.items = snap.val() || {};
+      this.render();
+    });
+    this._unsubs.push(unsub);
+  },
+
+  _listenMembers() {
+    const { db, ref, onValue } = window._fb;
+    const presRef = ref(db, `rooms/${this.state.roomId}/presence`);
+    const unsub = onValue(presRef, snap => {
+      this.state.members = snap.val() || {};
+      const count = Object.keys(this.state.members).length;
+      document.getElementById('userCount').textContent = `${count} 人在線`;
+      this._renderMembers();
+    });
+    this._unsubs.push(unsub);
+  },
+
+  _setupPresence() {
+    const { db, ref, set, onDisconnect } = window._fb;
+    const presRef = ref(db, `rooms/${this.state.roomId}/presence/${this.state.userId}`);
+    set(presRef, { nickname: this.state.nickname, online: true, joinedAt: Date.now() });
+    onDisconnect(presRef).remove();
+  },
+
+  _renderMembers() {
+    const bar = document.getElementById('membersBar');
+    bar.innerHTML = Object.entries(this.state.members).map(([uid, m]) => `
+      <div class="member-chip">
+        <div class="member-dot"></div>
+        ${this.escapeHtml(m.nickname)}${uid === this.state.userId ? ' (你)' : ''}
+      </div>
+    `).join('');
+  },
+
+  /* ────────────────────────────────────────────
+     資料夾與細項操作
+  ──────────────────────────────────────────── */
+  addFolder() {
+    const name = prompt('請輸入新資料夾分類名稱：');
+    if (!name) return;
+
+    const { db, ref, set } = window._fb;
+    const folderId = this.generateId();
+    this.showSyncStatus('pending');
+    set(ref(db, `rooms/${this.state.roomId}/folders/${folderId}`), {
+      name, order: Date.now()
+    }).then(() => {
+      this.state.activeFolder = folderId;
+      this.state.activeTab = null;
+    });
+  },
+
+  deleteFolder(folderId) {
+    if (!confirm(`確定要徹底刪除資料夾「${this.state.folders[folderId]?.name}」以及它內部的所有分頁與清單項目？`)) return;
+    const { db, ref, remove } = window._fb;
+    this.showSyncStatus('pending');
+
+    // 連帶刪除對應底下的 tabs 和 items
+    Object.entries(this.state.tabs).forEach(([tid, tab]) => {
+      if (tab.folderId === folderId) {
+        Object.entries(this.state.items).forEach(([iid, item]) => {
+          if (item.tabId === tid) remove(ref(db, `rooms/${this.state.roomId}/items/${iid}`));
+        });
+        remove(ref(db, `rooms/${this.state.roomId}/tabs/${tid}`));
+      }
+    });
+    remove(ref(db, `rooms/${this.state.roomId}/folders/${folderId}`));
+  },
+
+  addTab() {
+    if (!this.state.activeFolder) { alert('請先建立並選擇一個資料夾！'); return; }
+    const name = prompt('細項分頁名稱：');
+    if (!name) return;
+
+    const { db, ref, set } = window._fb;
+    const tabId = this.generateId();
+    this.showSyncStatus('pending');
+    set(ref(db, `rooms/${this.state.roomId}/tabs/${tabId}`), {
+      folderId: this.state.activeFolder,
+      name,
+      order: Date.now()
+    }).then(() => {
+      this.state.activeTab = tabId;
+    });
+  },
+
+  deleteTab(tabId) {
+    if (!confirm(`確定刪除分頁「${this.state.tabs[tabId]?.name}」與其中所有項目？`)) return;
+    const { db, ref, remove } = window._fb;
+    this.showSyncStatus('pending');
+
+    Object.entries(this.state.items).forEach(([iid, item]) => {
+      if (item.tabId === tabId) remove(ref(db, `rooms/${this.state.roomId}/items/${iid}`));
+    });
+    remove(ref(db, `rooms/${this.state.roomId}/tabs/${tabId}`));
+    this.state.activeTab = null;
+  },
+
+  addItem(tabId) {
+    const input = document.getElementById('newItemInput');
+    const text  = input ? input.value.trim() : prompt('待辦內容：');
+    if (!text) return;
+    if (input) input.value = '';
+
+    const { db, ref, set } = window._fb;
+    const itemId = this.generateId();
+    this.showSyncStatus('pending');
+    set(ref(db, `rooms/${this.state.roomId}/items/${itemId}`), {
+      tabId, text, done: false, doneBy: null, doneAt: null,
+      addedBy: this.state.nickname, addedAt: Date.now()
+    });
+  },
+
+  toggleItem(itemId) {
+    const item = this.state.items[itemId];
+    if (!item) return;
+
+    const { db, ref, update } = window._fb;
+    const nowDone = !item.done;
+    this.showSyncStatus('pending');
+    update(ref(db, `rooms/${this.state.roomId}/items/${itemId}`), {
+      done:   nowDone,
+      doneBy: nowDone ? this.state.nickname : null,
+      doneAt: nowDone ? Date.now() : null
+    });
+  },
+
+  deleteItem(itemId) {
+    if (!confirm('確定要刪除此待辦項目？')) return;
+    const { db, ref, remove } = window._fb;
+    this.showSyncStatus('pending');
+    remove(ref(db, `rooms/${this.state.roomId}/items/${itemId}`));
+  },
+
+  /* ────────────────────────────────────────────
+     介面渲染 UI 主驅動引擎
+  ──────────────────────────────────────────── */
+  render() {
+    const foldersStrip = document.getElementById('foldersStrip');
+    const tabsSection  = document.getElementById('tabsSection');
+    const tabsStrip    = document.getElementById('tabsStrip');
+    const itemsSection = document.getElementById('itemsSection');
+    const tabContent   = document.getElementById('tabContent');
+    const blankWelcome = document.getElementById('blankRoomWelcome');
+
+    if (!foldersStrip || !tabContent) return;
+
+    /* 1. 渲染 資料夾 橫列 */
+    foldersStrip.innerHTML = '';
+    const sortedFolders = Object.entries(this.state.folders).sort(([,a],[,b]) => (a.order||0) - (b.order||0));
+
+    sortedFolders.forEach(([fid, f]) => {
+      const btn = document.createElement('div');
+      btn.className = 'folder-btn' + (this.state.activeFolder === fid ? ' active' : '');
+      btn.innerHTML = `📁 <span>${this.escapeHtml(f.name)}</span>`;
+      btn.onclick = () => {
+        this.state.activeFolder = fid;
+        this.state.activeTab = null; // 切換資料夾時洗掉舊分頁選擇
+        this.render();
+      };
+      // 滑鼠右鍵刪除
+      btn.oncontextmenu = (e) => { e.preventDefault(); this.deleteFolder(fid); };
+      foldersStrip.appendChild(btn);
+    });
+
+    // 新增資料夾控制按鈕
+    const addFBtn = document.createElement('div');
+    addFBtn.className = 'folder-add-btn';
+    addFBtn.textContent = '＋ 新增資料夾';
+    addFBtn.onclick = () => this.addFolder();
+    foldersStrip.appendChild(addFBtn);
+
+    /* 判斷房間是否完全為空（沒有任何資料夾） */
+    if (sortedFolders.length === 0) {
+      tabsSection.style.display = 'none';
+      itemsSection.style.display = 'none';
+      blankWelcome.style.display = 'block';
+      return;
+    } else {
+      blankWelcome.style.display = 'none';
+    }
+
+    /* 2. 渲染對應資料夾下的 分頁橫列 */
+    tabsSection.style.display = 'block';
+    tabsStrip.innerHTML = '<span class="tab-add" onclick="app.addTab()">＋</span>';
+
+    const currentFolderTabs = Object.entries(this.state.tabs)
+      .filter(([, t]) => t.folderId === this.state.activeFolder)
+      .sort(([,a],[,b]) => (a.order||0) - (b.order||0));
+
+    // 防呆校正：若選中的 activeTab 不歸屬於當前資料夾，重抓該資料夾下第一個分頁
+    if (!this.state.activeTab || !this.state.tabs[this.state.activeTab] || this.state.tabs[this.state.activeTab].folderId !== this.state.activeFolder) {
+      this.state.activeTab = currentFolderTabs.length ? currentFolderTabs[0][0] : null;
+    }
+
+    currentFolderTabs.forEach(([tabId, tab]) => {
+      const btn = document.createElement('div');
+      btn.className = 'tab' + (this.state.activeTab === tabId ? ' active' : '');
+      btn.textContent = tab.name;
+      btn.onclick = () => { this.state.activeTab = tabId; this.render(); };
+      btn.oncontextmenu = (e) => { e.preventDefault(); this.deleteTab(tabId); };
+      tabsStrip.appendChild(btn);
+    });
+
+    /* 如果當前資料夾內尚無任何分頁 */
+    if (!this.state.activeTab) {
+      itemsSection.style.display = 'none';
+      tabContent.innerHTML = '<div class="empty-state"><div class="empty-icon">📄</div><p>此資料夾內目前沒有任何分頁項目，點選右方「＋」來新增分頁！</p></div>';
+      return;
+    }
+
+    /* 3. 渲染選中分頁下的 待辦項目清單 */
+    itemsSection.style.display = 'block';
+    const activeTab = this.state.tabs[this.state.activeTab];
+
+    const tabItems = Object.entries(this.state.items)
+      .filter(([, i]) => i.tabId === this.state.activeTab)
+      .sort(([,a],[,b]) => (a.addedAt||0) - (b.addedAt||0));
+
+    const doneCount = tabItems.filter(([,i]) => i.done).length;
+    const progress  = tabItems.length ? Math.round(doneCount / tabItems.length * 100) : 0;
+    const progressColor = progress === 100 ? 'var(--green)' : progress > 50 ? 'var(--yellow)' : 'var(--pink)';
+
+    let html = `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:20px; font-weight:800; color:var(--brown-dark); margin-bottom:4px;">${this.escapeHtml(activeTab.name)}</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">進度：${doneCount}/${tabItems.length} 完成 · ${progress}%</div>
+        <div style="height:6px; background:var(--cream3); border-radius:6px; overflow:hidden;">
+          <div style="height:100%; width:${progress}%; background:${progressColor}; transition:width 0.4s; border-radius:6px;"></div>
+        </div>
+      </div>
+    `;
+
+    if (tabItems.length) {
+      html += '<div class="todo-list">';
+      tabItems.forEach(([itemId, item]) => {
+        const whoTag = item.done && item.doneBy ? `<span class="todo-who">✓ ${this.escapeHtml(item.doneBy)}</span>` : '';
+        html += `
+          <div class="todo-item ${item.done ? 'done' : ''}">
+            <div class="todo-checkbox ${item.done ? 'done' : ''}" onclick="app.toggleItem('${itemId}')">
+              ${item.done ? '✓' : ''}
+            </div>
+            <div class="todo-text">${this.escapeHtml(item.text)}</div>
+            ${whoTag}
+            <button class="todo-delete" onclick="app.deleteItem('${itemId}')">🗑️</button>
+          </div>
+        `;
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="empty-state"><div class="empty-icon">✨</div><p>太棒了，目前沒有待辦事項！加入第一個項目吧。</p></div>';
+    }
+
+    // 表單注入
+    html += `
+      <div class="add-form" style="margin-top:18px;">
+        <input type="text" id="newItemInput" placeholder="在此新增本頁待辦項目..." />
+        <button class="add-btn" onclick="app.addItem('${this.state.activeTab}')">加入</button>
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+        💡 提示：在資料夾標籤或分頁上按「滑鼠右鍵」即可彈出刪除視窗。
+      </div>
+    `;
+
+    tabContent.innerHTML = html;
+
+    const input = document.getElementById('newItemInput');
+    if (input) {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') app.addItem(this.state.activeTab);
+      });
+    }
+  },
+
+  /* ────────────────────────────────────────────
+     公用/輔助小函式工具
+  ──────────────────────────────────────────── */
+  _genRoomId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    return Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  },
+  _genUserId() {
+    return 'u_' + Math.random().toString(36).substr(2, 9);
+  },
+  generateId() {
+    return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  },
+  showRoomInfo() {
+    document.getElementById('modalRoomName').textContent = this.state.roomName;
+    document.getElementById('modalRoomCode').textContent = this.state.roomId;
+    document.getElementById('roomInfoModal').classList.add('visible');
+  },
+  copyRoomCode() {
+    navigator.clipboard.writeText(this.state.roomId).then(() => {
+      alert('邀請碼複製成功，快分享給好友加入：' + this.state.roomId);
+    });
+  },
+  updateOnlineStatus() {
+    const indicator = document.getElementById('onlineIndicator');
+    if (this.state.isOnline) { indicator?.classList.remove('offline'); } 
+    else { indicator?.classList.add('offline'); }
+  },
+  showSyncStatus(status) {
+    const dot  = document.getElementById('syncDot');
+    const text = document.getElementById('syncText');
+    if (!dot || !text) return;
+    if (status === 'pending') {
+      dot.classList.add('pending');
+      text.textContent = '同步中...';
+    } else {
+      dot.classList.remove('pending');
+      text.textContent = '已同步';
+    }
+  },
+  escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[m]));
+  }
+};
+</script>
 </body>
 </html>
