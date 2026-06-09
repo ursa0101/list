@@ -22,523 +22,1274 @@
       authDomain: "my-travel-planner-3c04a.firebaseapp.com",
       databaseURL: "https://my-travel-planner-3c04a-default-rtdb.firebaseio.com",
       projectId: "my-travel-planner-3c04a",
-      storageBucket: "my-travel-planner-3c04a.appspot.com",
-      messagingSenderId: "128489311680",
-      appId: "1:128489311680:web:ee7fdf80bf0e7058df8645"
+      storageBucket: "my-travel-planner-3c04a.firebasestorage.app",
+      messagingSenderId: "1061443894751",
+      appId: "1:1061443894751:web:9117b1071228fffe05186a",
+      measurementId: "G-8DWEG0DFPZ"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getDatabase(firebaseApp);
 
-    // 全局控制
-    window.App = {
-      db,
-      state: {
-        roomId: '',
-        roomName: '',
-        userId: '',
-        userName: '',
-        currentFolderId: 'root',
-        folders: {},
-        todos: {},
-        isOnline: false
-      },
-
-      init() {
-        this.state.userId = this._getOrGen('userId', this._genUserId);
-        this.state.userName = this._getOrGen('userName', () => '匿名夥伴_' + Math.floor(Math.random()*1000));
-        
-        document.getElementById('userNameInput').value = this.state.userName;
-        
-        this.bindEvents();
-        this.checkUrlRoom();
-        this.setupNetworkDetection();
-      },
-      _getOrGen(k, gen) {
-        let v = localStorage.getItem(k);
-        if(!v){ v = gen(); localStorage.setItem(k, v); }
-        return v;
-      },
-      _genRoomId() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        return Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-      },
-      _genUserId() {
-        return 'u_' + Math.random().toString(36).substr(2, 9);
-      },
-      generateId() {
-        return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-      },
-      showRoomInfo() {
-        document.getElementById('modalRoomName').textContent = this.state.roomName;
-        document.getElementById('modalRoomCode').textContent = this.state.roomId;
-        document.getElementById('roomInfoModal').classList.add('visible');
-      },
-      copyRoomCode() {
-        navigator.clipboard.writeText(this.state.roomId).then(() => {
-          alert('邀請碼複製成功，快分享給好友加入：' + this.state.roomId);
-        });
-      },
-      updateOnlineStatus() {
-        const indicator = document.getElementById('onlineIndicator');
-        if (this.state.isOnline) { indicator?.classList.remove('offline'); } 
-        else { indicator?.classList.add('offline'); }
-      },
-      showSyncStatus(status) {
-        const dot  = document.getElementById('syncDot');
-        const text = document.getElementById('syncText');
-        if (!dot || !text) return;
-        if (status === 'pending') {
-          dot.classList.add('pending');
-          text.textContent = '同步中...';
-        } else {
-          dot.classList.remove('pending');
-          text.textContent = '已同步';
-        }
-      },
-      setupNetworkDetection() {
-        window.addEventListener('online', () => { this.state.isOnline = true; this.updateOnlineStatus(); });
-        window.addEventListener('offline', () => { this.state.isOnline = false; this.updateOnlineStatus(); });
-        this.state.isOnline = navigator.onLine;
-        this.updateOnlineStatus();
-      },
-
-      bindEvents() {
-        document.getElementById('btnCreateRoom').onclick = () => {
-          const name = document.getElementById('inputRoomName').value.trim() || '未命名計畫本';
-          const rId = this._genRoomId();
-          this.switchRoom(rId, name);
-        };
-        document.getElementById('btnJoinRoom').onclick = () => {
-          const rId = document.getElementById('inputRoomCode').value.trim().toUpperCase();
-          if(!rId) return alert('請輸入邀請碼');
-          this.switchRoom(rId);
-        };
-        document.getElementById('userNameInput').onchange = (e) => {
-          const n = e.target.value.trim();
-          if(n) {
-            this.state.userName = n;
-            localStorage.setItem('userName', n);
-            if(this.state.roomId) this.updateUserPresence();
-          }
-        };
-        document.getElementById('btnAddFolder').onclick = () => {
-          const name = document.getElementById('inputFolderName').value.trim();
-          if(!name) return;
-          this.createFolder(name);
-          document.getElementById('inputFolderName').value = '';
-        };
-        document.getElementById('btnAddTodo').onclick = () => {
-          const text = document.getElementById('inputTodoText').value.trim();
-          if(!text) return;
-          this.createTodo(text);
-          document.getElementById('inputTodoText').value = '';
-        };
-        document.getElementById('inputTodoText').onkeydown = (e) => {
-          if(e.key === 'Enter') document.getElementById('btnAddTodo').click();
-        };
-        document.getElementById('btnCopyInfoCode').onclick = () => this.copyRoomCode();
-        document.querySelectorAll('.close-modal').forEach(b => {
-          b.onclick = () => b.closest('.modal').classList.remove('visible');
-        });
-      },
-
-      checkUrlRoom() {
-        const p = new URLSearchParams(window.location.search);
-        const r = p.get('room');
-        if(r) { this.switchRoom(r.toUpperCase()); } 
-        else { document.getElementById('lobbySection').classList.remove('hidden'); }
-      },
-
-      switchRoom(rId, optName = '') {
-        this.state.roomId = rId;
-        history.replaceState(null, '', '?room=' + rId);
-        document.getElementById('lobbySection').classList.add('hidden');
-        document.getElementById('appSection').classList.remove('hidden');
-        
-        this.showSyncStatus('pending');
-        
-        const rRef = ref(this.db, `rooms/${rId}/meta`);
-        get(rRef).then(snap => {
-          if(snap.exists()){
-            this.state.roomName = snap.val().name || '合作計劃本';
-          } else {
-            this.state.roomName = optName || '新合作計劃本';
-            set(rRef, { name: this.state.roomName, created: serverTimestamp() });
-          }
-          document.getElementById('currentRoomTitle').textContent = this.state.roomName;
-          this.listenToRoom();
-          this.setupPresence();
-        });
-      },
-
-      listenToRoom() {
-        const fRef = ref(this.db, `rooms/${this.state.roomId}/folders`);
-        onValue(fRef, snap => {
-          this.state.folders = snap.val() || {};
-          this.renderFolders();
-        });
-
-        const tRef = ref(this.db, `rooms/${this.state.roomId}/todos`);
-        onValue(tRef, snap => {
-          this.state.todos = snap.val() || {};
-          this.renderTodos();
-          this.showSyncStatus('success');
-        });
-      },
-
-      setupPresence() {
-        const pRef = ref(this.db, `rooms/${this.state.roomId}/presence/${this.state.userId}`);
-        const conRef = ref(this.db, '.info/connected');
-        onValue(conRef, snap => {
-          if (snap.val() === true) {
-            onDisconnect(pRef).remove();
-            this.updateUserPresence();
-          }
-        });
-
-        const allPRef = ref(this.db, `rooms/${this.state.roomId}/presence`);
-        onValue(allPRef, snap => {
-          const users = snap.val() || {};
-          const list = document.getElementById('onlineUsersList');
-          if(!list) return;
-          list.innerHTML = '';
-          Object.values(users).forEach(u => {
-            const el = document.createElement('span');
-            el.className = 'user-badge';
-            el.textContent = u.name || '神秘夥伴';
-            list.appendChild(el);
-          });
-        });
-      },
-
-      updateUserPresence() {
-        const pRef = ref(this.db, `rooms/${this.state.roomId}/presence/${this.state.userId}`);
-        set(pRef, { name: this.state.userName, lastActive: serverTimestamp() });
-      },
-
-      createFolder(name) {
-        const id = this.generateId();
-        const fRef = ref(this.db, `rooms/${this.state.roomId}/folders/${id}`);
-        this.showSyncStatus('pending');
-        set(fRef, { id, name, created: serverTimestamp() });
-      },
-
-      deleteFolder(id, e) {
-        e.stopPropagation();
-        if(!confirm('確定要刪除此資料夾及其中所有任務嗎？')) return;
-        this.showSyncStatus('pending');
-        
-        // 刪除該資料夾
-        remove(ref(this.db, `rooms/${this.state.roomId}/folders/${id}`));
-        
-        // 刪除資料夾底下的所有任務
-        const tIds = Object.keys(this.state.todos).filter(k => this.state.todos[k].folderId === id);
-        tIds.forEach(tId => {
-          remove(ref(this.db, `rooms/${this.state.roomId}/todos/${tId}`));
-        });
-
-        if(this.state.currentFolderId === id) {
-          this.state.currentFolderId = 'root';
-        }
-      },
-
-      createTodo(text) {
-        const id = this.generateId();
-        const tRef = ref(this.db, `rooms/${this.state.roomId}/todos/${id}`);
-        this.showSyncStatus('pending');
-        set(tRef, {
-          id,
-          text,
-          done: false,
-          folderId: this.state.currentFolderId,
-          creator: this.state.userName,
-          created: serverTimestamp()
-        });
-      },
-
-      toggleTodo(id, currentStatus) {
-        const tRef = ref(this.db, `rooms/${this.state.roomId}/todos/${id}`);
-        this.showSyncStatus('pending');
-        update(tRef, { done: !currentStatus });
-      },
-
-      deleteTodo(id) {
-        this.showSyncStatus('pending');
-        remove(ref(this.db, `rooms/${this.state.roomId}/todos/${id}`));
-      },
-
-      selectFolder(id) {
-        this.state.currentFolderId = id;
-        this.renderFolders();
-        this.renderTodos();
-      },
-
-      renderFolders() {
-        const list = document.getElementById('folderList');
-        list.innerHTML = '';
-
-        // 預設「根目錄」
-        const rootEl = document.createElement('div');
-        rootEl.className = `folder-item ${this.state.currentFolderId === 'root' ? 'active' : ''}`;
-        rootEl.innerHTML = `<span>📁 所有未分類事項</span>`;
-        rootEl.onclick = () => this.selectFolder('root');
-        list.appendChild(rootEl);
-
-        // 自訂資料夾
-        Object.values(this.state.folders).forEach(f => {
-          const el = document.createElement('div');
-          el.className = `folder-item ${this.state.currentFolderId === f.id ? 'active' : ''}`;
-          el.innerHTML = `
-            <span>📁 ${this.esc(f.name)}</span>
-            <button class="btn-del-folder">×</button>
-          `;
-          el.querySelector('.btn-del-folder').onclick = (e) => this.deleteFolder(f.id, e);
-          el.onclick = () => this.selectFolder(f.id);
-          list.appendChild(el);
-        });
-      },
-
-      renderTodos() {
-        const list = document.getElementById('todoList');
-        list.innerHTML = '';
-
-        const fTodos = Object.values(this.state.todos).filter(t => t.folderId === this.state.currentFolderId);
-        
-        // 麵包屑提示
-        const currentFolderName = this.state.currentFolderId === 'root' ? '所有未分類事項' : (this.state.folders[this.state.currentFolderId]?.name || '未知資料夾');
-        document.getElementById('currentPathTitle').textContent = currentFolderName;
-
-        if(fTodos.length === 0) {
-          list.innerHTML = `<div class="empty-state">這裡空空如也，新增一項任務吧 ✨</div>`;
-          return;
-        }
-
-        fTodos.forEach(t => {
-          const el = document.createElement('div');
-          el.className = `todo-item ${t.done ? 'done' : ''}`;
-          el.innerHTML = `
-            <div class="todo-left">
-              <input type="checkbox" ${t.done ? 'checked' : ''} />
-              <span class="todo-text">${this.esc(t.text)}</span>
-            </div>
-            <div class="todo-right">
-              <span class="todo-meta">👤 ${this.esc(t.creator)}</span>
-              <button class="btn-del-todo">🗑️</button>
-            </div>
-          `;
-
-          el.querySelector('input[type="checkbox"]').onchange = () => this.toggleTodo(t.id, t.done);
-          el.querySelector('.btn-del-todo').onclick = () => this.deleteTodo(t.id);
-          list.appendChild(el);
-        });
-      },
-
-      esc(str) {
-        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-      }
+    /* ══════════════════════════════════════════════
+       把 db helpers 掛到 window，讓 app 物件可以用
+    ══════════════════════════════════════════════ */
+    window._fb = {
+      db, ref, set, get, update, remove,
+      onValue, onChildAdded, onChildChanged, onChildRemoved,
+      push, serverTimestamp, onDisconnect
     };
 
-    window.onload = () => App.init();
+    /* Firebase 載入後才初始化 app */
+    document.addEventListener('DOMContentLoaded', () => {
+      app.init();
+    });
   </script>
 
   <style>
     :root {
-      --bg: #faf7f2;
-      --panel-bg: #ffffff;
-      --primary: #9b7b5a;
-      --primary-light: #c4a882;
-      --text: #4a3e3d;
-      --text-muted: #8c7b75;
-      --border: #ede6d8;
-      --accent: #7bc8a4;
-      --accent-light: #e8f7f0;
-      --danger: #f2a7b8;
+      --cream: #faf7f2;
+      --cream2: #f4efe6;
+      --cream3: #ede6d8;
+      --brown-light: #c4a882;
+      --brown: #9b7b5a;
+      --brown-dark: #6b5240;
+      --pink: #f2a7b8;
+      --pink-light: #fce8ee;
+      --green: #7bc8a4;
+      --green-light: #e8f7f0;
+      --yellow: #f7d98c;
+      --yellow-light: #fef8e7;
+      --blue: #a7c4e8;
+      --blue-light: #eaf2fb;
+      --purple: #c4a8e8;
+      --purple-light: #f3edfb;
+      --text: #5c4a38;
+      --text-muted: #9b8878;
+      --border: #e2d8cc;
+      --shadow: rgba(156, 123, 90, 0.12);
       --radius: 16px;
-      --shadow: 0 8px 24px rgba(155, 123, 90, 0.06);
+      --radius-sm: 10px;
     }
 
-    * { box-sizing: border-box; font-family: 'Nunito', 'Zen Maru Gothic', sans-serif; margin: 0; padding: 0; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Nunito", "Zen Maru Gothic", sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── 認證與登入外層 ── */
+    #authScreen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--cream2) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .login-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 35px 40px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 12px 40px var(--shadow);
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    .login-card h1 { font-size: 26px; margin-bottom: 20px; color: var(--brown-dark); text-align: center; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .form-group input {
+      width: 100%;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--cream);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--brown-light); background: white; }
+
+    .login-buttons { display: flex; gap: 10px; margin-top: 10px; }
+
+    .btn-primary, .btn-secondary {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .btn-primary { background: var(--brown-dark); color: white; }
+    .btn-primary:hover { background: var(--brown); transform: translateY(-1px); }
+    .btn-secondary { background: var(--cream2); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-secondary:hover { background: var(--cream3); }
+
+    .btn-loading { opacity: 0.7; pointer-events: none; }
+
+    .status-badge {
+      display: block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .status-online  { background: var(--green-light); color: var(--green); }
+    .status-offline { background: #ffebee; color: #c53030; }
+
+    /* ── 房間管理大廳畫面 ── */
+    #roomManagementScreen {
+      display: none;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--cream) 0%, var(--cream2) 100%);
+      padding: 40px 20px;
+    }
+    .mgmt-container {
+      max-width: 550px;
+      margin: 0 auto;
+      background: white;
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: 0 12px 40px var(--shadow);
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .room-list-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 12px 0 24px 0;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .room-item-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--cream);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .room-item-info img { width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;}
+
+    /* ── 左側滑出式側邊欄 ── */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      background: white;
+      border-right: 1.5px solid var(--border);
+      z-index: 1000;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 999;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .sidebar-overlay.visible { display: block; opacity: 1; }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1.5px solid var(--border);
+      background: var(--cream2);
+    }
+    .sidebar-menu { flex: 1; overflow-y: auto; padding: 16px; }
+    .sidebar-room-item {
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      margin-bottom: 6px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1.5px solid transparent;
+    }
+    .sidebar-room-item:hover { background: var(--cream2); }
+    .sidebar-room-item.active { background: var(--pink-light); color: var(--pink); border-color: var(--pink); }
+
+    /* ── 主應用主畫面 ── */
+    #appScreen { display: none; }
+
+    .topbar {
+      background: var(--cream);
+      border-bottom: 1.5px solid var(--border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .topbar-title { font-size: 20px; font-weight: 800; color: var(--brown-dark); }
     
-    .container { width: 100%; max-width: 1100px; display: flex; flex-direction: column; gap: 20px; }
-    .hidden { display: none !important; }
+    /* 列表小圖標按鈕 */
+    .menu-icon-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: var(--brown-dark);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .menu-icon-btn:hover { background: var(--cream2); }
 
-    /* 大廳樣式 */
-    .lobby-card { background: var(--panel-bg); padding: 40px; border-radius: var(--radius); border: 2px solid var(--border); box-shadow: var(--shadow); max-width: 500px; margin: 60px auto; text-align: center; }
-    .lobby-card h1 { font-size: 2rem; color: var(--primary); margin-bottom: 12px; }
-    .lobby-subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 30px; }
-    .lobby-box { background: var(--bg); padding: 24px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; text-align: left; }
-    .lobby-box h3 { margin-bottom: 12px; color: var(--primary); font-size: 1.05rem; }
-    .flex-row { display: flex; gap: 10px; }
-    input[type="text"] { flex: 1; padding: 12px 16px; border-radius: 8px; border: 2px solid var(--border); font-size: 1rem; color: var(--text); outline: none; transition: border-color 0.2s; }
-    input[type="text"]:focus { border-color: var(--primary-light); }
-    button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; transition: opacity 0.2s; }
-    button:hover { opacity: 0.9; }
-    .btn-secondary { background: var(--border); color: var(--text); }
+    .online-indicator {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .online-indicator.offline { background: #d32f2f; animation: none; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-    /* 頂部導航 */
-    .top-bar { background: var(--panel-bg); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); }
-    .top-left h2 { color: var(--primary); font-size: 1.35rem; display: flex; align-items: center; gap: 8px; }
-    .top-right { display: flex; align-items: center; gap: 16px; }
-    
-    .status-badge { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-muted); background: var(--bg); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); }
-    .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
-    .dot.pending { background: #f7d98c; animation: pulse 1s infinite; }
-    .dot.offline { background: var(--danger); }
-    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+    .topbar-users { font-size: 12px; color: var(--text-muted); font-weight: 600; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
 
-    .user-profile { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; font-weight: 700; }
-    .user-profile input { padding: 6px 10px; font-size: 0.9rem; width: 120px; border-radius: 6px; }
+    .room-info-btn, .leave-btn {
+      padding: 6px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .room-info-btn:hover { background: var(--cream2); color: var(--text); }
+    .leave-btn:hover     { border-color: #d32f2f; color: #d32f2f; }
 
-    /* 主畫面佈局 */
-    .main-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
-    
-    /* 左側側邊欄：資料夾 */
-    .sidebar { background: var(--panel-bg); border: 2px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 20px; }
-    .sidebar-section h3 { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 12px; }
-    
-    .folder-list { display: flex; flex-direction: column; gap: 6px; }
-    .folder-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; font-weight: 500; }
-    .folder-item:hover { background: var(--bg); }
-    .folder-item.active { background: var(--accent-light); color: var(--primary); font-weight: 700; }
-    .btn-del-folder { background: none; color: var(--text-muted); padding: 2px 6px; font-size: 1rem; }
-    .btn-del-folder:hover { color: var(--danger); }
+    .main-content { padding: 20px 16px 100px; max-width: 680px; margin: 0 auto; }
 
-    /* 右側主內容：代辦事項 */
-    .content-area { background: var(--panel-bg); border: 2px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 20px; }
-    .content-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--bg); padding-bottom: 12px; }
-    .content-header h3 { font-size: 1.2rem; color: var(--primary); }
+    /* ── 資料夾分類列 ── */
+    .folders-strip { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+    .folder-btn {
+      padding: 10px 16px;
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .folder-btn:hover { background: var(--cream2); border-color: var(--brown-light); }
+    .folder-btn.active { background: var(--brown-dark); color: white; border-color: var(--brown-dark); }
+    .folder-add-btn {
+      padding: 10px 14px;
+      background: var(--cream2);
+      border: 1.5px dashed var(--brown-light);
+      border-radius: var(--radius-sm);
+      color: var(--brown);
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .folder-add-btn:hover { background: var(--cream3); }
 
-    .todo-list { display: flex; flex-direction: column; gap: 10px; min-height: 200px; }
-    .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; transition: all 0.2s; }
-    .todo-item:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-    .todo-item.done { opacity: 0.6; }
+    /* ── 分頁列 ── */
+    .tabs-strip { display: flex; gap: 4px; margin-bottom: 20px; overflow-x: auto; border-bottom: 1.5px solid var(--border); }
+    .tab {
+      padding: 8px 14px;
+      border-radius: 10px 10px 0 0;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1.5px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .tab:hover { color: var(--text); background: var(--cream2); }
+    .tab.active {
+      color: var(--brown-dark);
+      background: white;
+      border-color: var(--border);
+      border-bottom-color: white;
+    }
+    .tab-add { padding: 8px 12px; color: var(--brown-light); cursor: pointer; border-radius: var(--radius-sm); transition: all 0.2s; font-size: 16px; }
+    .tab-add:hover { color: var(--brown); background: var(--cream2); }
+
+    /* ── 待辦清單項目 ── */
+    .todo-list { display: flex; flex-direction: column; gap: 8px; }
+    .todo-item {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .todo-item:hover { box-shadow: 0 3px 14px var(--shadow); }
+    .todo-item.done { opacity: 0.7; background: var(--cream2); }
     .todo-item.done .todo-text { text-decoration: line-through; color: var(--text-muted); }
-    
-    .todo-left { display: flex; align-items: center; gap: 12px; }
-    .todo-left input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
-    .todo-text { font-size: 1rem; font-weight: 500; }
-    
-    .todo-right { display: flex; align-items: center; gap: 12px; }
-    .todo-meta { font-size: 0.8rem; background: var(--panel-bg); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); color: var(--text-muted); }
-    .btn-del-todo { background: none; font-size: 1rem; padding: 4px; }
-    .btn-del-todo:hover { transform: scale(1.1); }
 
-    .empty-state { text-align: center; color: var(--text-muted); font-size: 0.95rem; padding: 40px 0; }
+    .todo-who { font-size: 10px; color: var(--text-muted); background: var(--cream2); border-radius: 20px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+    .todo-checkbox {
+      width: 28px; height: 28px; border: 2px solid var(--border); border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; background: white; flex-shrink: 0; transition: all 0.2s; font-size: 14px;
+    }
+    .todo-checkbox:hover  { border-color: var(--brown-light); }
+    .todo-checkbox.done   { border-color: var(--green); background: var(--green-light); color: var(--green); }
+    .todo-text { flex: 1; font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.4; }
 
-    /* 在線夥伴區 */
-    .presence-panel { background: var(--panel-bg); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px 24px; box-shadow: var(--shadow); }
-    .presence-panel h4 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; }
-    .user-badges { display: flex; flex-wrap: wrap; gap: 8px; }
-    .user-badge { background: var(--bg); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; color: var(--primary); }
+    .todo-delete { width: 28px; height: 28px; border: none; background: none; color: #d32f2f; cursor: pointer; font-size: 14px; opacity: 0; transition: all 0.2s; }
+    .todo-item:hover .todo-delete { opacity: 1; }
+    .todo-delete:hover { transform: scale(1.2); }
 
-    /* 彈跳視窗 */
-    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(74, 62, 61, 0.4); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 100; }
-    .modal.visible { opacity: 1; pointer-events: auto; }
-    .modal-card { background: var(--panel-bg); padding: 30px; border-radius: var(--radius); border: 2px solid var(--border); max-width: 400px; width: 90%; text-align: center; position: relative; }
-    .modal-card h3 { margin-bottom: 12px; color: var(--primary); }
-    .room-code-display { font-size: 1.8rem; font-weight: 800; letter-spacing: 2px; color: var(--primary); background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin: 16px 0; }
-    .close-modal { position: absolute; top: 12px; right: 16px; font-size: 1.5rem; background: none; color: var(--text-muted); }
+    .add-form { display: flex; gap: 10px; margin-bottom: 16px; }
+    .add-form input {
+      flex: 1; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 9px 13px;
+      font-size: 14px; font-family: inherit; color: var(--text); background: var(--cream); outline: none; transition: border-color 0.2s;
+    }
+    .add-form input:focus { border-color: var(--brown-light); background: white; }
+    .add-btn { background: var(--pink); color: white; border: none; border-radius: var(--radius-sm); padding: 9px 16px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s; }
+    .add-btn:hover { background: #e8919e; }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty-icon  { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+    .members-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 14px; background: var(--cream2); border-radius: var(--radius-sm); border: 1.5px solid var(--border); }
+    .member-chip { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--text); background: white; border-radius: 20px; padding: 4px 10px; border: 1.5px solid var(--border); }
+    .member-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+    /* ── Modal ── */
+    .modal-bg { position: fixed; inset: 0; background: rgba(91, 70, 56, 0.35); display: none; align-items: center; justify-content: center; z-index: 2000; }
+    .modal-bg.visible { display: flex; }
+    .modal { background: white; border-radius: var(--radius); padding: 24px; max-width: 360px; width: 100%; box-shadow: 0 12px 40px rgba(0,0,0,.15); }
+    .modal h2 { font-size: 18px; margin-bottom: 16px; color: var(--brown-dark); }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+    .sync-status { position: fixed; bottom: 20px; right: 20px; background: white; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--text-muted); box-shadow: 0 4px 12px var(--shadow); display: flex; align-items: center; gap: 6px; z-index: 90; }
+    .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+    .sync-dot.pending { background: var(--yellow); animation: pulse 1s ease-in-out infinite; }
+
+    @media (max-width: 480px) {
+      .main-content { padding: 16px 12px 100px; }
+      .topbar       { padding: 12px 16px; }
+      .topbar-title  { font-size: 18px; }
+      .mgmt-container { padding: 20px 16px; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="container">
-    
-    <section id="lobbySection" class="lobby-card hidden">
-      <h1>✨ 協作計劃本</h1>
-      <p class="lobby-subtitle">即時同步、跨裝置協作的團隊筆記空間</p>
-      
-      <div class="lobby-box">
-        <h3>創建新計畫本</h3>
-        <div class="flex-row">
-          <input type="text" id="inputRoomName" placeholder="例如：暑假沖繩旅行團 🌴" />
-          <button id="btnCreateRoom">創建</button>
-        </div>
-      </div>
-
-      <div class="lobby-box">
-        <h3>加入已有計畫本</h3>
-        <div class="flex-row">
-          <input type="text" id="inputRoomCode" placeholder="請輸入 8 碼英文數字邀請碼" />
-          <button id="btnJoinRoom" class="btn-secondary">加入</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="appSection" class="container hidden">
-      
-      <header class="top-bar">
-        <div class="top-left">
-          <h2 id="currentRoomTitle">讀取中...</h2>
-        </div>
-        <div class="top-right">
-          <div class="status-badge">
-            <div id="syncDot" class="dot"></div>
-            <span id="syncText">同步中...</span>
-          </div>
-          <div id="onlineIndicator" class="status-badge">
-            <div class="dot"></div>
-            <span>網路連線正常</span>
-          </div>
-          <div class="user-profile">
-            <span>暱稱：</span>
-            <input type="text" id="userNameInput" placeholder="修改暱稱" />
-          </div>
-          <button id="btnCopyInfoCode" style="padding: 6px 12px; font-size:0.85rem;">📋 分享邀請碼</button>
-        </div>
-      </header>
-
-      <div class="main-grid">
-        
-        <aside class="sidebar">
-          <div class="sidebar-section">
-            <h3>📂 分類資料夾</h3>
-            <div id="folderList" class="folder-list">
-              </div>
-          </div>
-          <div class="sidebar-section" style="margin-top: auto; border-top: 1px solid var(--border); padding-top: 16px;">
-            <div class="flex-row" style="gap: 6px;">
-              <input type="text" id="inputFolderName" placeholder="新資料夾名稱" style="padding: 8px 12px; font-size: 0.9rem;" />
-              <button id="btnAddFolder" style="padding: 8px 12px; font-size: 0.9rem;">＋</button>
-            </div>
-          </div>
-        </aside>
-
-        <main class="content-area">
-          <div class="content-header">
-            <h3 id="currentPathTitle">未分類事項</h3>
-          </div>
-
-          <div class="flex-row">
-            <input type="text" id="inputTodoText" placeholder="寫下新的計畫或待辦事項..." />
-            <button id="btnAddTodo">新增事項</button>
-          </div>
-
-          <div id="todoList" class="todo-list">
-            </div>
-        </main>
-      </div>
-
-      <footer class="presence-panel">
-        <h4>👥 目前在線夥伴</h4>
-        <div id="onlineUsersList" class="user-badges">
-          </div>
-      </footer>
-
-    </section>
-  </div>
-
-  <div id="roomInfoModal" class="modal">
-    <div class="modal-card">
-      <button class="close-modal">&times;</button>
-      <h3 id="modalRoomName">計畫本資訊</h3>
-      <p style="color: var(--text-muted); font-size: 0.9rem;">分享此代碼給好友，即可即時同步協作</p>
-      <div id="modalRoomCode" class="room-code-display">--------</div>
-      <button id="btnCopyInfoCodeReal" onclick="App.copyRoomCode()" style="width: 100%;">📋 複製邀請網址與代碼</button>
+<div id="authScreen">
+  <div class="login-card" id="loginCard" style="display:block;">
+    <h1>✨ 計劃本登入</h1>
+    <div id="statusBadge" class="status-badge status-offline">🔴 連線中...</div>
+    <div class="form-group">
+      <label>登入帳號 (Username)</label>
+      <input type="text" id="loginUsernameInput" placeholder="請輸入帳號" maxlength="30" />
+    </div>
+    <div class="form-group">
+      <label>密碼 (Password)</label>
+      <input type="password" id="loginPasswordInput" placeholder="請輸入密碼" />
+    </div>
+    <div class="login-buttons">
+      <button class="btn-primary" id="loginBtn" onclick="app.loginAccount()">登入進入</button>
+      <button class="btn-secondary" onclick="app.switchAuthView('register')">註冊帳號</button>
     </div>
   </div>
 
+  <div class="login-card" id="registerCard" style="display:none;">
+    <h1>📝 註冊全新帳號</h1>
+    <div class="form-group">
+      <label>你的暱稱 / 名字</label>
+      <input type="text" id="regNicknameInput" placeholder="例：小美" maxlength="20" />
+    </div>
+    <div class="form-group">
+      <label>設定帳號</label>
+      <input type="text" id="regUsernameInput" placeholder="請輸入欲設定的帳號" maxlength="30" />
+    </div>
+    <div class="form-group">
+      <label>設定密碼</label>
+      <input type="password" id="regPasswordInput" placeholder="請輸入密碼" />
+    </div>
+    <div class="login-buttons">
+      <button class="btn-primary" onclick="app.registerAccount()">確定註冊帳號</button>
+      <button class="btn-secondary" onclick="app.switchAuthView('login')">返回登入</button>
+    </div>
+  </div>
+
+  <div class="login-card" id="regSuccessCard" style="display:none; text-align:center;">
+    <div style="font-size: 54px; margin-bottom: 12px;">🎉</div>
+    <h1 style="color: var(--green); margin-bottom: 12px;">恭喜註冊完成！</h1>
+    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">
+      您的帳號已經成功建立！快點擊下方按鈕前往登入，開始體驗即時多人協作計劃本。
+    </p>
+    <button class="btn-primary" style="width:100%;" onclick="app.switchAuthView('login')">去登入</button>
+  </div>
+</div>
+
+<div id="roomManagementScreen">
+  <div class="mgmt-container">
+    <h2 id="mgmtUserTitle" style="font-size:22px; color:var(--brown-dark); margin-bottom:4px;">✨ 歡迎回來</h2>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">請選擇房間進入或建立新空間</p>
+
+    <div>
+      <h3 class="section-title">📍 目前已加入的房間</h3>
+      <div class="room-list-box" id="joinedRoomsList">
+        </div>
+    </div>
+
+    <hr style="border:none; border-top:1.5px solid var(--border); margin:24px 0;" />
+
+    <div class="form-group">
+      <h3 class="section-title">🔑 輸入邀請碼加入房間</h3>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <input type="text" id="joinRoomCodeInput" placeholder="請輸入 8 位數邀請碼" maxlength="8" style="text-transform:uppercase;" />
+        <button class="btn-primary" style="flex:0 0 100px; padding:10px;" onclick="app.joinRoomWithCode()">加入</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <h3 class="section-title">➕ 建立新房間</h3>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <input type="text" id="newRoomNameInput" placeholder="請為新房間取名（例：生活計畫）" maxlength="30" />
+        <button class="btn-primary" style="flex:0 0 100px; padding:10px; background:var(--pink);" onclick="app.createRoom()">建立房間</button>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:24px;">
+      <button class="btn-secondary" style="font-size:12px; padding:6px 12px;" onclick="app.logoutAccount()">🚪 登出帳號</button>
+    </div>
+  </div>
+</div>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="app.toggleSidebar()"></div>
+<div id="sidebar" class="sidebar">
+  <div class="sidebar-header">
+    <div style="font-weight:800; font-size:16px; color:var(--brown-dark);">🏡 房間快速切換</div>
+    <div id="sidebarUserNick" style="font-size:12px; color:var(--text-muted); margin-top:4px;">使用者: --</div>
+  </div>
+  <div class="sidebar-menu">
+    <h3 class="section-title" style="margin-bottom:10px;">我的房間列表</h3>
+    <div id="sidebarRoomList">
+      </div>
+  </div>
+  <div style="padding:16px; border-top:1.5px solid var(--border); background:var(--cream);">
+    <button class="btn-secondary" style="width:100%; padding:10px; font-size:13px;" onclick="app.goBackToLobby()">返回房間大廳</button>
+  </div>
+</div>
+
+<div id="appScreen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-icon-btn" onclick="app.toggleSidebar()">☰</button>
+      <div class="online-indicator" id="onlineIndicator"></div>
+      <div class="topbar-title" id="appTitle">我的計劃本</div>
+    </div>
+    <div class="topbar-users" id="userCount">1 人在線</div>
+    <div class="topbar-right">
+      <button class="room-info-btn" onclick="app.showRoomInfo()">📍 邀請碼</button>
+      <button class="leave-btn"     onclick="app.goBackToLobby()">🚪 大廳</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="members-bar" id="membersBar"></div>
+
+    <div style="margin-bottom:14px;">
+      <h3 class="section-title">📁 資料夾分類</h3>
+      <div class="folders-strip" id="foldersStrip">
+        </div>
+    </div>
+
+    <div id="tabsSection" style="display:none; margin-bottom:14px;">
+      <h3 class="section-title">📄 內部細項分頁</h3>
+      <div class="tabs-strip" id="tabsStrip">
+        <span class="tab-add" onclick="app.addTab()">＋</span>
+      </div>
+    </div>
+
+    <div id="itemsSection" style="display:none;">
+      <div id="tabContent"></div>
+    </div>
+    
+    <div id="blankRoomWelcome" class="empty-state" style="display:none;">
+      <div class="empty-icon">✨</div>
+      <p style="font-weight:700; color:var(--brown-dark);">這是一個全新空白的房間！</p>
+      <p style="font-size:13px; color:var(--text-muted); margin-top:4px;">請點擊上方「＋ 新增資料夾」開始建立您的筆記結構</p>
+    </div>
+  </div>
+
+  <div class="sync-status">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncText">已同步</span>
+  </div>
+</div>
+
+<div id="roomInfoModal" class="modal-bg">
+  <div class="modal">
+    <h2>📍 房間資訊</h2>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">房間名稱</div>
+      <div style="font-size:16px;font-weight:700;color:var(--brown-dark);" id="modalRoomName"></div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">房間邀請碼</div>
+      <div style="font-size:20px;font-weight:800;font-family:monospace;letter-spacing:2px;color:var(--pink);" id="modalRoomCode"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="app.copyRoomCode()">📋 複製邀請碼</button>
+      <button class="btn-primary" onclick="document.getElementById('roomInfoModal').classList.remove('visible')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   🎯 多人協作計劃本 — Firebase Realtime Database 升級版
+   資料結構：
+     users/{username}/password -> 密碼字串
+     users/{username}/nickname -> 暱稱字串
+     users/{username}/joinedRooms/{roomId} -> { name, joinedAt }
+     rooms/{roomId}/meta -> { name, createdBy, createdAt }
+     rooms/{roomId}/folders/{folderId} -> { name, order }
+     rooms/{roomId}/tabs/{tabId} -> { folderId, name, order }
+     rooms/{roomId}/items/{itemId} -> { tabId, text, done, doneBy, doneAt, addedBy, addedAt }
+     rooms/{roomId}/presence/{userId} -> { nickname, online: true }
+   ══════════════════════════════════════════════════════════════ */
+
+const app = {
+  state: {
+    username:   null, // 唯一使用者帳號
+    nickname:   null, // 使用者暱稱
+    userId:     null, // 當前設備隨機產生的 Presence ID
+    roomId:     null, // 當前進入的房間ID
+    roomName:   null, // 當前進入的房間名稱
+    isOnline:   false,
+    joinedRooms:{},   // 使用者擁有的房間列表
+    folders:    {},   // 當前房間的資料夾
+    tabs:       {},   // 當前房間的分頁
+    items:      {},   // 當前房間的項目
+    members:    {},   // 在線成員
+    activeFolder: null, // 選中的資料夾ID
+    activeTab:  null    // 選中的分頁ID
+  },
+
+  _unsubs: [],
+  _lobbyUnsub: null,
+
+  init() {
+    const wait = setInterval(() => {
+      if (window._fb) {
+        clearInterval(wait);
+        this._onFirebaseReady();
+      }
+    }, 50);
+  },
+
+  _onFirebaseReady() {
+    // 檢查 LocalStorage 狀態嘗試自動登入
+    const savedSession = localStorage.getItem('planner_session');
+    if (savedSession) {
+      try {
+        const sess = JSON.parse(savedSession);
+        this.state.username = sess.username;
+        this.state.nickname = sess.nickname;
+        this.state.userId = this._genUserId();
+        this.showRoomManagement();
+      } catch(_) {
+        this.switchAuthView('login');
+      }
+    } else {
+      this.switchAuthView('login');
+    }
+
+    document.getElementById('statusBadge').className = 'status-badge status-online';
+    document.getElementById('statusBadge').textContent = '🟢 Firebase 伺服器已連線';
+  },
+
+  switchAuthView(view) {
+    document.getElementById('loginCard').style.display = view === 'login' ? 'block' : 'none';
+    document.getElementById('registerCard').style.display = view === 'register' ? 'block' : 'none';
+    document.getElementById('regSuccessCard').style.display = view === 'regSuccess' ? 'block' : 'none';
+  },
+
+  /* ── 註冊邏輯 ── */
+  async registerAccount() {
+    const nickname = document.getElementById('regNicknameInput').value.trim();
+    const username = document.getElementById('regUsernameInput').value.trim().toLowerCase();
+    const password = document.getElementById('regPasswordInput').value.trim();
+
+    if (!nickname || !username || !password) { alert('請完整填寫所有註冊欄位！'); return; }
+    if (username.length < 3) { alert('帳號長度至少需 3 個字元！'); return; }
+
+    const { db, ref, get, set } = window._fb;
+    try {
+      const userSnap = await get(ref(db, `users/${username}`));
+      if (userSnap.exists()) { alert('此帳號已存在，請換一個帳號名稱！'); return; }
+
+      // 寫入帳號資料
+      await set(ref(db, `users/${username}`), {
+        nickname: nickname,
+        password: password,
+        createdAt: Date.now()
+      });
+
+      // 清空註冊欄位並跳轉到註冊成功畫面
+      document.getElementById('regNicknameInput').value = '';
+      document.getElementById('regUsernameInput').value = '';
+      document.getElementById('regPasswordInput').value = '';
+      this.switchAuthView('regSuccess');
+    } catch(e) {
+      alert('註冊發生錯誤：' + e.message);
+    }
+  },
+
+  /* ── 登入邏輯 ── */
+  async loginAccount() {
+    const username = document.getElementById('loginUsernameInput').value.trim().toLowerCase();
+    const password = document.getElementById('loginPasswordInput').value.trim();
+
+    if (!username || !password) { alert('請輸入帳號與密碼！'); return; }
+
+    const { db, ref, get } = window._fb;
+    try {
+      const userSnap = await get(ref(db, `users/${username}`));
+      if (!userSnap.exists()) { alert('帳號不存在，請先註冊！'); return; }
+
+      const userData = userSnap.val();
+      if (userData.password !== password) { alert('密碼錯誤，請再試一次！'); return; }
+
+      this.state.username = username;
+      this.state.nickname = userData.nickname;
+      this.state.userId = this._genUserId();
+
+      // 保存工作階段
+      localStorage.setItem('planner_session', JSON.stringify({
+        username: username,
+        nickname: userData.nickname
+      }));
+
+      this.showRoomManagement();
+    } catch(e) {
+      alert('登入失敗：' + e.message);
+    }
+  },
+
+  /* ── 進入大廳並監聽房間列表 ── */
+  showRoomManagement() {
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('roomManagementScreen').style.display = 'block';
+    document.getElementById('appScreen').style.display = 'none';
+
+    document.getElementById('mgmtUserTitle').textContent = `✨ 歡迎回來，${this.state.nickname}`;
+
+    const { db, ref, onValue } = window._fb;
+    const userRoomsRef = ref(db, `users/${this.state.username}/joinedRooms`);
+
+    if (this._lobbyUnsub) this._lobbyUnsub();
+
+    this._lobbyUnsub = onValue(userRoomsRef, snap => {
+      this.state.joinedRooms = snap.val() || {};
+      this.renderLobbyRoomList();
+      this.renderSidebarRoomList();
+    });
+  },
+
+  renderLobbyRoomList() {
+    const container = document.getElementById('joinedRoomsList');
+    if (!container) return;
+
+    const roomsArray = Object.entries(this.state.joinedRooms);
+    if (roomsArray.length === 0) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:30px; color:var(--text-muted); background:var(--cream); border-radius:var(--radius-sm); border:1.5px dashed var(--border); font-size:13px;">
+          您目前尚未加入任何協作房間，請在下方建立新房間或輸入邀請碼加入！
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = roomsArray.map(([rid, r]) => `
+      <div class="room-item-card">
+        <div>
+          <div style="font-weight:700; color:var(--brown-dark); font-size:15px;">🏡 ${this.escapeHtml(r.name)}</div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">邀請碼: <span style="font-family:monospace; font-weight:700;">${rid}</span></div>
+        </div>
+        <button class="btn-primary" style="flex:none; padding:6px 14px; font-size:13px;" onclick="app.enterRoom('${rid}', '${r.name}')">進入房間 →</button>
+      </div>
+    `).join('');
+  },
+
+  /* ── 建立自訂名稱房間（自動生成邀請碼） ── */
+  async createRoom() {
+    const roomName = document.getElementById('newRoomNameInput').value.trim();
+    if (!roomName) { alert('請輸入欲建立的房間名稱！'); return; }
+
+    const roomId = this._genRoomId(); // 自動生成 8 碼不重複代碼
+    const { db, ref, set } = window._fb;
+
+    try {
+      // 1. 寫入房間基本資訊
+      await set(ref(db, `rooms/${roomId}/meta`), {
+        name: roomName,
+        createdBy: this.state.username,
+        createdAt: Date.now()
+      });
+
+      // 2. 把房間加入到使用者的個人清單中
+      await set(ref(db, `users/${this.state.username}/joinedRooms/${roomId}`), {
+        name: roomName,
+        joinedAt: Date.now()
+      });
+
+      document.getElementById('newRoomNameInput').value = '';
+      
+      // 自動進入此全新房間
+      this.enterRoom(roomId, roomName);
+    } catch(e) {
+      alert('建立房間失敗：' + e.message);
+    }
+  },
+
+  /* ── 透過邀請碼加入房間 ── */
+  async joinRoomWithCode() {
+    const code = document.getElementById('joinRoomCodeInput').value.trim().toUpperCase();
+    if (!code) { alert('請輸入房間邀請碼！'); return; }
+
+    const { db, ref, get, set } = window._fb;
+    try {
+      const roomSnap = await get(ref(db, `rooms/${code}/meta`));
+      if (!roomSnap.exists()) { alert('找不到該房間，請確認邀請碼是否正確！'); return; }
+
+      const roomMeta = roomSnap.val();
+
+      // 把房間關聯寫入使用者的清單中
+      await set(ref(db, `users/${this.state.username}/joinedRooms/${code}`), {
+        name: roomMeta.name,
+        joinedAt: Date.now()
+      });
+
+      document.getElementById('joinRoomCodeInput').value = '';
+      this.enterRoom(code, roomMeta.name);
+    } catch(e) {
+      alert('加入房間失敗：' + e.message);
+    }
+  },
+
+  /* ── 進入主要協作應用空間 ── */
+  enterRoom(roomId, roomName) {
+    this.state.roomId = roomId;
+    this.state.roomName = roomName;
+
+    document.getElementById('roomManagementScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+
+    document.getElementById('appTitle').textContent = roomName;
+
+    // 清空舊的房間監聽器
+    this._unsubs.forEach(u => u());
+    this._unsubs = [];
+
+    // 重設選中狀態
+    this.state.activeFolder = null;
+    this.state.activeTab = null;
+
+    this.state.isOnline = true;
+    this.updateOnlineStatus();
+
+    // 啟動資料庫即時同步監聽
+    this._setupPresence();
+    this._listenFolders();
+    this._listenTabs();
+    this._listenItems();
+    this._listenMembers();
+  },
+
+  goBackToLobby() {
+    // 斷開 Presence
+    const { db, ref, remove } = window._fb;
+    if (this.state.roomId && this.state.userId) {
+      remove(ref(db, `rooms/${this.state.roomId}/presence/${this.state.userId}`));
+    }
+    this._unsubs.forEach(u => u());
+    this._unsubs = [];
+    
+    if (document.getElementById('sidebar').classList.contains('open')) {
+      this.toggleSidebar();
+    }
+
+    this.showRoomManagement();
+  },
+
+  logoutAccount() {
+    if (this._lobbyUnsub) this._lobbyUnsub();
+    localStorage.removeItem('planner_session');
+    location.reload();
+  },
+
+  /* ── 側邊欄控制與切換 ── */
+  toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar.classList.contains('open')) {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+    } else {
+      sidebar.classList.add('open');
+      overlay.classList.add('visible');
+      document.getElementById('sidebarUserNick').textContent = `使用者暱稱: ${this.state.nickname}`;
+      this.renderSidebarRoomList();
+    }
+  },
+
+  renderSidebarRoomList() {
+    const container = document.getElementById('sidebarRoomList');
+    if (!container) return;
+
+    const roomsArray = Object.entries(this.state.joinedRooms);
+    if (roomsArray.length === 0) {
+      container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">暫無房間</div>';
+      return;
+    }
+
+    container.innerHTML = roomsArray.map(([rid, r]) => {
+      const isActive = rid === this.state.roomId;
+      return `
+        <div class="sidebar-room-item ${isActive ? 'active' : ''}" onclick="app.handleSidebarSwitch('${rid}', '${r.name}')">
+          <span>🏡 ${this.escapeHtml(r.name)}</span>
+          <span style="font-family:monospace; font-size:10px; opacity:0.6;">${rid}</span>
+        </div>
+      `;
+    }).join('');
+  },
+
+  handleSidebarSwitch(roomId, roomName) {
+    this.toggleSidebar();
+    this.enterRoom(roomId, roomName);
+  },
+
+  /* ────────────────────────────────────────────
+     三層結構即時資料庫監聽 (資料夾 -> 分頁 -> 待辦項目)
+  ──────────────────────────────────────────── */
+  _listenFolders() {
+    const { db, ref, onValue } = window._fb;
+    const foldersRef = ref(db, `rooms/${this.state.roomId}/folders`);
+    const unsub = onValue(foldersRef, snap => {
+      this.state.folders = snap.val() || {};
+      const fIds = Object.keys(this.state.folders);
+      // 若當前沒有選取資料夾，預選第一個
+      if (!this.state.activeFolder || !this.state.folders[this.state.activeFolder]) {
+        this.state.activeFolder = fIds.length ? fIds[0] : null;
+      }
+      this.render();
+      this.showSyncStatus('synced');
+    });
+    this._unsubs.push(unsub);
+  },
+
+  _listenTabs() {
+    const { db, ref, onValue } = window._fb;
+    const tabsRef = ref(db, `rooms/${this.state.roomId}/tabs`);
+    const unsub = onValue(tabsRef, snap => {
+      this.state.tabs = snap.val() || {};
+      this.render();
+    });
+    this._unsubs.push(unsub);
+  },
+
+  _listenItems() {
+    const { db, ref, onValue } = window._fb;
+    const itemsRef = ref(db, `rooms/${this.state.roomId}/items`);
+    const unsub = onValue(itemsRef, snap => {
+      this.state.items = snap.val() || {};
+      this.render();
+    });
+    this._unsubs.push(unsub);
+  },
+
+  _listenMembers() {
+    const { db, ref, onValue } = window._fb;
+    const presRef = ref(db, `rooms/${this.state.roomId}/presence`);
+    const unsub = onValue(presRef, snap => {
+      this.state.members = snap.val() || {};
+      const count = Object.keys(this.state.members).length;
+      document.getElementById('userCount').textContent = `${count} 人在線`;
+      this._renderMembers();
+    });
+    this._unsubs.push(unsub);
+  },
+
+  _setupPresence() {
+    const { db, ref, set, onDisconnect } = window._fb;
+    const presRef = ref(db, `rooms/${this.state.roomId}/presence/${this.state.userId}`);
+    set(presRef, { nickname: this.state.nickname, online: true, joinedAt: Date.now() });
+    onDisconnect(presRef).remove();
+  },
+
+  _renderMembers() {
+    const bar = document.getElementById('membersBar');
+    bar.innerHTML = Object.entries(this.state.members).map(([uid, m]) => `
+      <div class="member-chip">
+        <div class="member-dot"></div>
+        ${this.escapeHtml(m.nickname)}${uid === this.state.userId ? ' (你)' : ''}
+      </div>
+    `).join('');
+  },
+
+  /* ────────────────────────────────────────────
+     資料夾與細項操作
+  ──────────────────────────────────────────── */
+  addFolder() {
+    const name = prompt('請輸入新資料夾分類名稱：');
+    if (!name) return;
+
+    const { db, ref, set } = window._fb;
+    const folderId = this.generateId();
+    this.showSyncStatus('pending');
+    set(ref(db, `rooms/${this.state.roomId}/folders/${folderId}`), {
+      name, order: Date.now()
+    }).then(() => {
+      this.state.activeFolder = folderId;
+      this.state.activeTab = null;
+    });
+  },
+
+  deleteFolder(folderId) {
+    if (!confirm(`確定要徹底刪除資料夾「${this.state.folders[folderId]?.name}」以及它內部的所有分頁與清單項目？`)) return;
+    const { db, ref, remove } = window._fb;
+    this.showSyncStatus('pending');
+
+    // 連帶刪除對應底下的 tabs 和 items
+    Object.entries(this.state.tabs).forEach(([tid, tab]) => {
+      if (tab.folderId === folderId) {
+        Object.entries(this.state.items).forEach(([iid, item]) => {
+          if (item.tabId === tid) remove(ref(db, `rooms/${this.state.roomId}/items/${iid}`));
+        });
+        remove(ref(db, `rooms/${this.state.roomId}/tabs/${tid}`));
+      }
+    });
+    remove(ref(db, `rooms/${this.state.roomId}/folders/${folderId}`));
+  },
+
+  addTab() {
+    if (!this.state.activeFolder) { alert('請先建立並選擇一個資料夾！'); return; }
+    const name = prompt('細項分頁名稱：');
+    if (!name) return;
+
+    const { db, ref, set } = window._fb;
+    const tabId = this.generateId();
+    this.showSyncStatus('pending');
+    set(ref(db, `rooms/${this.state.roomId}/tabs/${tabId}`), {
+      folderId: this.state.activeFolder,
+      name,
+      order: Date.now()
+    }).then(() => {
+      this.state.activeTab = tabId;
+    });
+  },
+
+  deleteTab(tabId) {
+    if (!confirm(`確定刪除分頁「${this.state.tabs[tabId]?.name}」與其中所有項目？`)) return;
+    const { db, ref, remove } = window._fb;
+    this.showSyncStatus('pending');
+
+    Object.entries(this.state.items).forEach(([iid, item]) => {
+      if (item.tabId === tabId) remove(ref(db, `rooms/${this.state.roomId}/items/${iid}`));
+    });
+    remove(ref(db, `rooms/${this.state.roomId}/tabs/${tabId}`));
+    this.state.activeTab = null;
+  },
+
+  addItem(tabId) {
+    const input = document.getElementById('newItemInput');
+    const text  = input ? input.value.trim() : prompt('待辦內容：');
+    if (!text) return;
+    if (input) input.value = '';
+
+    const { db, ref, set } = window._fb;
+    const itemId = this.generateId();
+    this.showSyncStatus('pending');
+    set(ref(db, `rooms/${this.state.roomId}/items/${itemId}`), {
+      tabId, text, done: false, doneBy: null, doneAt: null,
+      addedBy: this.state.nickname, addedAt: Date.now()
+    });
+  },
+
+  toggleItem(itemId) {
+    const item = this.state.items[itemId];
+    if (!item) return;
+
+    const { db, ref, update } = window._fb;
+    const nowDone = !item.done;
+    this.showSyncStatus('pending');
+    update(ref(db, `rooms/${this.state.roomId}/items/${itemId}`), {
+      done:   nowDone,
+      doneBy: nowDone ? this.state.nickname : null,
+      doneAt: nowDone ? Date.now() : null
+    });
+  },
+
+  deleteItem(itemId) {
+    if (!confirm('確定要刪除此待辦項目？')) return;
+    const { db, ref, remove } = window._fb;
+    this.showSyncStatus('pending');
+    remove(ref(db, `rooms/${this.state.roomId}/items/${itemId}`));
+  },
+
+  /* ────────────────────────────────────────────
+     介面渲染 UI 主驅動引擎
+  ──────────────────────────────────────────── */
+  render() {
+    const foldersStrip = document.getElementById('foldersStrip');
+    const tabsSection  = document.getElementById('tabsSection');
+    const tabsStrip    = document.getElementById('tabsStrip');
+    const itemsSection = document.getElementById('itemsSection');
+    const tabContent   = document.getElementById('tabContent');
+    const blankWelcome = document.getElementById('blankRoomWelcome');
+
+    if (!foldersStrip || !tabContent) return;
+
+    /* 1. 渲染 資料夾 橫列 */
+    foldersStrip.innerHTML = '';
+    const sortedFolders = Object.entries(this.state.folders).sort(([,a],[,b]) => (a.order||0) - (b.order||0));
+
+    sortedFolders.forEach(([fid, f]) => {
+      const btn = document.createElement('div');
+      btn.className = 'folder-btn' + (this.state.activeFolder === fid ? ' active' : '');
+      btn.innerHTML = `📁 <span>${this.escapeHtml(f.name)}</span>`;
+      btn.onclick = () => {
+        this.state.activeFolder = fid;
+        this.state.activeTab = null; // 切換資料夾時洗掉舊分頁選擇
+        this.render();
+      };
+      // 滑鼠右鍵刪除
+      btn.oncontextmenu = (e) => { e.preventDefault(); this.deleteFolder(fid); };
+      foldersStrip.appendChild(btn);
+    });
+
+    // 新增資料夾控制按鈕
+    const addFBtn = document.createElement('div');
+    addFBtn.className = 'folder-add-btn';
+    addFBtn.textContent = '＋ 新增資料夾';
+    addFBtn.onclick = () => this.addFolder();
+    foldersStrip.appendChild(addFBtn);
+
+    /* 判斷房間是否完全為空（沒有任何資料夾） */
+    if (sortedFolders.length === 0) {
+      tabsSection.style.display = 'none';
+      itemsSection.style.display = 'none';
+      blankWelcome.style.display = 'block';
+      return;
+    } else {
+      blankWelcome.style.display = 'none';
+    }
+
+    /* 2. 渲染對應資料夾下的 分頁橫列 */
+    tabsSection.style.display = 'block';
+    tabsStrip.innerHTML = '<span class="tab-add" onclick="app.addTab()">＋</span>';
+
+    const currentFolderTabs = Object.entries(this.state.tabs)
+      .filter(([, t]) => t.folderId === this.state.activeFolder)
+      .sort(([,a],[,b]) => (a.order||0) - (b.order||0));
+
+    // 防呆校正：若選中的 activeTab 不歸屬於當前資料夾，重抓該資料夾下第一個分頁
+    if (!this.state.activeTab || !this.state.tabs[this.state.activeTab] || this.state.tabs[this.state.activeTab].folderId !== this.state.activeFolder) {
+      this.state.activeTab = currentFolderTabs.length ? currentFolderTabs[0][0] : null;
+    }
+
+    currentFolderTabs.forEach(([tabId, tab]) => {
+      const btn = document.createElement('div');
+      btn.className = 'tab' + (this.state.activeTab === tabId ? ' active' : '');
+      btn.textContent = tab.name;
+      btn.onclick = () => { this.state.activeTab = tabId; this.render(); };
+      btn.oncontextmenu = (e) => { e.preventDefault(); this.deleteTab(tabId); };
+      tabsStrip.appendChild(btn);
+    });
+
+    /* 如果當前資料夾內尚無任何分頁 */
+    if (!this.state.activeTab) {
+      itemsSection.style.display = 'none';
+      tabContent.innerHTML = '<div class="empty-state"><div class="empty-icon">📄</div><p>此資料夾內目前沒有任何分頁項目，點選右方「＋」來新增分頁！</p></div>';
+      return;
+    }
+
+    /* 3. 渲染選中分頁下的 待辦項目清單 */
+    itemsSection.style.display = 'block';
+    const activeTab = this.state.tabs[this.state.activeTab];
+
+    const tabItems = Object.entries(this.state.items)
+      .filter(([, i]) => i.tabId === this.state.activeTab)
+      .sort(([,a],[,b]) => (a.addedAt||0) - (b.addedAt||0));
+
+    const doneCount = tabItems.filter(([,i]) => i.done).length;
+    const progress  = tabItems.length ? Math.round(doneCount / tabItems.length * 100) : 0;
+    const progressColor = progress === 100 ? 'var(--green)' : progress > 50 ? 'var(--yellow)' : 'var(--pink)';
+
+    let html = `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:20px; font-weight:800; color:var(--brown-dark); margin-bottom:4px;">${this.escapeHtml(activeTab.name)}</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">進度：${doneCount}/${tabItems.length} 完成 · ${progress}%</div>
+        <div style="height:6px; background:var(--cream3); border-radius:6px; overflow:hidden;">
+          <div style="height:100%; width:${progress}%; background:${progressColor}; transition:width 0.4s; border-radius:6px;"></div>
+        </div>
+      </div>
+    `;
+
+    if (tabItems.length) {
+      html += '<div class="todo-list">';
+      tabItems.forEach(([itemId, item]) => {
+        const whoTag = item.done && item.doneBy ? `<span class="todo-who">✓ ${this.escapeHtml(item.doneBy)}</span>` : '';
+        html += `
+          <div class="todo-item ${item.done ? 'done' : ''}">
+            <div class="todo-checkbox ${item.done ? 'done' : ''}" onclick="app.toggleItem('${itemId}')">
+              ${item.done ? '✓' : ''}
+            </div>
+            <div class="todo-text">${this.escapeHtml(item.text)}</div>
+            ${whoTag}
+            <button class="todo-delete" onclick="app.deleteItem('${itemId}')">🗑️</button>
+          </div>
+        `;
+      });
+      html += '</div>';
+    } else {
+      html += '<div class="empty-state"><div class="empty-icon">✨</div><p>太棒了，目前沒有待辦事項！加入第一個項目吧。</p></div>';
+    }
+
+    // 表單注入
+    html += `
+      <div class="add-form" style="margin-top:18px;">
+        <input type="text" id="newItemInput" placeholder="在此新增本頁待辦項目..." />
+        <button class="add-btn" onclick="app.addItem('${this.state.activeTab}')">加入</button>
+      </div>
+      <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+        💡 提示：在資料夾標籤或分頁上按「滑鼠右鍵」即可彈出刪除視窗。
+      </div>
+    `;
+
+    tabContent.innerHTML = html;
+
+    const input = document.getElementById('newItemInput');
+    if (input) {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') app.addItem(this.state.activeTab);
+      });
+    }
+  },
+
+  /* ────────────────────────────────────────────
+     公用/輔助小函式工具
+  ──────────────────────────────────────────── */
+  _genRoomId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    return Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  },
+  _genUserId() {
+    return 'u_' + Math.random().toString(36).substr(2, 9);
+  },
+  generateId() {
+    return 'id_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  },
+  showRoomInfo() {
+    document.getElementById('modalRoomName').textContent = this.state.roomName;
+    document.getElementById('modalRoomCode').textContent = this.state.roomId;
+    document.getElementById('roomInfoModal').classList.add('visible');
+  },
+  copyRoomCode() {
+    navigator.clipboard.writeText(this.state.roomId).then(() => {
+      alert('邀請碼複製成功，快分享給好友加入：' + this.state.roomId);
+    });
+  },
+  updateOnlineStatus() {
+    const indicator = document.getElementById('onlineIndicator');
+    if (this.state.isOnline) { indicator?.classList.remove('offline'); } 
+    else { indicator?.classList.add('offline'); }
+  },
+  showSyncStatus(status) {
+    const dot  = document.getElementById('syncDot');
+    const text = document.getElementById('syncText');
+    if (!dot || !text) return;
+    if (status === 'pending') {
+      dot.classList.add('pending');
+      text.textContent = '同步中...';
+    } else {
+      dot.classList.remove('pending');
+      text.textContent = '已同步';
+    }
+  },
+  escapeHtml(text) {
+    if (!text) return '';
+    return String(text).replace(/[&<>"']/g, m => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[m]));
+  }
+};
+</script>
 </body>
 </html>
